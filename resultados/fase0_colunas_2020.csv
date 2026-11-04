@@ -1,0 +1,31 @@
+coluna,tipo_inferido,vazios,na,pct_nulo,distintos,exemplos
+id,texto,0,0,0.0,63585,260068 | 260073 | 260087
+data_inversa,data_iso,0,0,0.0,366,2020-12-19 | 2020-10-10 | 2020-12-05
+dia_semana,texto,0,0,0.0,7,sábado | domingo | sexta-feira
+horario,hora,0,0,0.0,1271,18:30:00 | 19:00:00 | 18:00:00
+uf,texto,0,0,0.0,27,MG | SC | PR
+br,inteiro,0,0,0.0,116,101 | 116 | 381
+km,decimal_virgula,0,0,0.0,7790,0 | 3 | 1
+municipio,texto,0,0,0.0,1790,BRASILIA | CURITIBA | GUARULHOS
+causa_acidente,texto,0,0,0.0,62,Falta de Atenção à Condução | Desobediência às normas de trânsito pelo condutor | Velocidade Incompatível
+tipo_acidente,texto,1,0,0.002,20,Colisão traseira | Saída de leito carroçável | Colisão transversal
+classificacao_acidente,texto,0,2,0.003,3,Com Vítimas Feridas | Sem Vítimas | Com Vítimas Fatais
+fase_dia,texto,0,0,0.0,4,Pleno dia | Plena Noite | Anoitecer
+sentido_via,texto,0,0,0.0,3,Crescente | Decrescente | Não Informado
+condicao_metereologica,texto,0,0,0.0,10,Céu Claro | Nublado | Chuva
+tipo_pista,texto,0,0,0.0,3,Simples | Dupla | Múltipla
+tracado_via,texto,0,0,0.0,337,Reta | Curva | Interseção de Vias
+uso_solo,texto,0,0,0.0,2,Não | Sim
+pessoas,inteiro,0,0,0.0,48,2 | 1 | 3
+mortos,inteiro,0,0,0.0,12,0 | 1 | 2
+feridos_leves,inteiro,0,0,0.0,30,1 | 0 | 2
+feridos_graves,inteiro,0,0,0.0,15,0 | 1 | 2
+ilesos,inteiro,0,0,0.0,39,1 | 0 | 2
+ignorados,inteiro,0,0,0.0,15,0 | 1 | 2
+feridos,inteiro,0,0,0.0,33,1 | 0 | 2
+veiculos,inteiro,0,0,0.0,18,2 | 1 | 3
+latitude,decimal_virgula,0,0,0.0,33944,"-3,76999035 | -25,568198 | -8,766685"
+longitude,decimal_virgula,0,0,0.0,33941,"-38,67006282 | -48,615292 | -63,884052"
+regional,texto,0,0,0.0,27,SPRF-MG | SPRF-SC | SPRF-PR
+delegacia,texto,0,0,0.0,153,DEL01-PR | DEL04-SC | DEL01-MG
+uop,texto,0,0,0.0,381,UOP01-DEL01-SC | UOP03-DEL01-MG | UOP01-DEL01-SP

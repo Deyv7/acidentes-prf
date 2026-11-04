@@ -1,0 +1,21 @@
+# Dados brutos da PRF: nunca versionar (ficam fora do repo)
+data/
+*.zip
+*.csv.gz
+
+# Credenciais
+.env
+.databrickscfg
+
+# Python / Spark local
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Sistema
+.DS_Store
+Thumbs.db

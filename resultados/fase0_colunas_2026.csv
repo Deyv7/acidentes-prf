@@ -1,0 +1,31 @@
+coluna,tipo_inferido,vazios,na,pct_nulo,distintos,exemplos
+id,texto,0,0,0.0,54895,742921 | 742942 | 742943
+data_inversa,data_iso,0,0,0.0,273,2026-09-05 | 2026-02-13 | 2026-07-11
+dia_semana,texto,0,0,0.0,7,domingo | sábado | sexta-feira
+horario,hora,0,0,0.0,1407,19:00:00 | 18:00:00 | 17:00:00
+uf,texto,0,0,0.0,27,MG | SC | PR
+br,inteiro,0,0,0.0,112,101 | 116 | 381
+km,decimal_virgula,0,0,0.0,6999,0 | 1 | 2
+municipio,texto,0,0,0.0,1823,BRASILIA | DUQUE DE CAXIAS | SAO JOSE
+causa_acidente,texto,0,0,0.0,69,Ausência de reação do condutor | Reação tardia ou ineficiente do condutor | Acessar a via sem observar a presença dos outros veículos
+tipo_acidente,texto,0,0,0.0,17,Colisão traseira | Saída de leito carroçável | Colisão transversal
+classificacao_acidente,texto,0,1,0.002,3,Com Vítimas Feridas | Sem Vítimas | Com Vítimas Fatais
+fase_dia,texto,0,0,0.0,4,Pleno dia | Plena Noite | Anoitecer
+sentido_via,texto,0,0,0.0,3,Crescente | Decrescente | Não Informado
+condicao_metereologica,texto,0,0,0.0,10,Céu Claro | Nublado | Chuva
+tipo_pista,texto,0,0,0.0,3,Simples | Dupla | Múltipla
+tracado_via,texto,0,0,0.0,531,Reta | Curva | Reta;Declive
+uso_solo,texto,0,0,0.0,2,Não | Sim
+pessoas,inteiro,0,0,0.0,58,2 | 1 | 3
+mortos,inteiro,0,0,0.0,13,0 | 1 | 2
+feridos_leves,inteiro,0,0,0.0,30,1 | 0 | 2
+feridos_graves,inteiro,0,0,0.0,18,0 | 1 | 2
+ilesos,inteiro,0,0,0.0,52,1 | 0 | 2
+ignorados,inteiro,0,0,0.0,17,0 | 1 | 2
+feridos,inteiro,0,0,0.0,37,1 | 0 | 2
+veiculos,inteiro,0,0,0.0,19,2 | 1 | 3
+latitude,decimal_virgula,0,0,0.0,54322,"-16 | -22,793068 | -19"
+longitude,decimal_virgula,0,0,0.0,54239,"-43,024872 | -48 | -49"
+regional,texto,0,1,0.002,28,SPRF-MG | SPRF-SC | SPRF-PR
+delegacia,texto,0,1,0.002,156,DEL01-PR | DEL01-MG | DEL04-SC
+uop,texto,0,1,0.002,396,UOP01-DEL01-SC | UOP03-DEL01-MG | UOP01-DEL01-PE
