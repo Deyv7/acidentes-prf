@@ -10,7 +10,7 @@ Medallion é organizar o dado em camadas, cada uma com um contrato:
 |---|---|---|
 | Bronze | `bronze_ocorrencias` | o CSV como veio, tudo texto, mais o arquivo de origem e a hora da ingestão |
 | Silver | `silver_ocorrencias` | uma linha por ocorrência, com tipos certos, nulos tratados e regras de limpeza aplicadas |
-| Gold | (Fase 2) | tabelas prontas para uma pergunta: uma linha por ocorrência para o modelo e agregados para a análise |
+| Gold | `gold_ocorrencias_modelo`, `gold_graves_por_recorte` | tabelas prontas para uma pergunta: uma linha por ocorrência para o modelo e agregados para a análise, de 2019 a 2025 |
 
 Por que separar: se uma regra da silver estiver errada, eu corrijo o código e reprocesso a partir da bronze, sem baixar nada de novo. E a bronze serve de prova do que a fonte mandou. Foi assim que achei o id em notação científica: a bronze guardou `"1e+05"` exatamente como veio.
 
@@ -33,7 +33,7 @@ O Unity Catalog é a camada de governança do Databricks: cada tabela e cada pas
 - schema `portfolio.acidentes_prf`;
 - volume `portfolio.acidentes_prf.bruto`, uma pasta de arquivos (ZIP e CSV) dentro do Unity Catalog, acessível como `/Volumes/portfolio/acidentes_prf/bruto/...`;
 - volume `portfolio.acidentes_prf.artefatos`, onde fica o wheel com o código de `src/`;
-- tabelas `bronze_ocorrencias` e `silver_ocorrencias` no mesmo schema.
+- tabelas `bronze_ocorrencias`, `silver_ocorrencias`, `gold_ocorrencias_modelo` e `gold_graves_por_recorte` no mesmo schema.
 
 Por que volume e não baixar direto no notebook: o Free Edition restringe o acesso à internet de saída. Os ZIPs sobem da minha máquina para o volume pela CLI, e o notebook lê de lá.
 
@@ -107,7 +107,7 @@ Por que isso importa: são duas leituras independentes do mesmo arquivo. Se o Sp
 
 ## Execução no Databricks
 
-`databricks/implantar.sh` faz tudo pela CLI: importa os notebooks, cria o schema e os volumes (`00_configurar`), sobe o wheel e os ZIPs de 2017 a 2025 e dispara o job de `databricks/job_bronze_silver.json`, com a bronze e depois a silver. O notebook `02_silver` confere que a silver tem o mesmo número de linhas da bronze vigente e devolve a contagem por ano como saída. O script busca essa saída pela CLI e `src/conferir_databricks.py` compara com a execução local: ocorrências, graves, com morto, coordenada inválida, id corrigido e classificação imputada batem nos nove anos (`resultados/fase1_conferencia_databricks.csv`, coluna `bate_com_local`).
+`databricks/implantar.sh` faz tudo pela CLI: importa os notebooks, cria o schema e os volumes (`00_configurar`), sobe o wheel e os ZIPs de 2017 a 2025 e dispara o job de `databricks/job_pipeline.json`, com a bronze, a silver e a gold em sequência. O notebook `02_silver` confere que a silver tem o mesmo número de linhas da bronze vigente e devolve a contagem por ano como saída. O script busca essa saída pela CLI e `src/conferir_databricks.py` compara com a execução local: ocorrências, graves, com morto, coordenada inválida, id corrigido e classificação imputada batem nos nove anos (`resultados/fase1_conferencia_databricks.csv`, coluna `bate_com_local`). O notebook `03_gold` faz o mesmo com a qualidade e a gold, e todos os números batem (`resultados/fase2_conferencia_databricks.csv`, coluna `bate`).
 
 Dois problemas de plataforma apareceram no caminho, e os dois mudaram o desenho.
 
@@ -117,9 +117,54 @@ Dois problemas de plataforma apareceram no caminho, e os dois mudaram o desenho.
 
 Numa entrevista, eu diria: "Os dois erros apareceram porque eu conferia o resultado e não só se o job terminava. E as duas correções deixaram o projeto mais reprodutível: o código vai num artefato versionado e a versão do Spark é explícita nos dois ambientes."
 
+## Testes de qualidade
+
+`src/qualidade.py`. Os testes do pytest provam que o código faz o que eu quero com dados de exemplo. Os testes de qualidade rodam no pipeline, com o dado real, a cada execução. Cada regra descreve a condição de uma linha reprovada e é de um de dois tipos:
+
+- **bloqueante**: se uma linha reprovar, o notebook `03_gold` para antes de gravar a gold. São coisas que eu não sei corrigir: `id` nulo ou repetido, data fora do ano do arquivo, dia da semana que não é o da data, contagem negativa ou nula, `feridos` diferente de leves mais graves, classificação que contradiz as contagens, `pessoas` maior que a soma, alvo `grave` nulo;
+- **com tratamento**: a fonte real tem linhas assim, e a silver já fez algo com elas. A regra conta quantas são e diz o que foi feito.
+
+| Regra com tratamento | O que a silver faz | Regra bloqueante que confere o tratamento |
+|---|---|---|
+| `coordenada_fora_do_brasil_ou_ausente` | anula latitude e longitude e marca `coord_valida = false`; a ocorrência fica | `coordenada_valida_fora_do_brasil` |
+| `classificacao_ausente` | deriva a classificação das contagens e marca `classificacao_imputada` | `classificacao_incoerente`, que olha a classificação já derivada |
+| `pessoas_menor_que_total` | cria `total_envolvidos`, que fecha com o arquivo por pessoa | `pessoas_maior_que_total` |
+
+Uma condição que dá nulo conta como reprovada: uma regra que não consegue avaliar a linha não pode aprová-la.
+
+Na silver real de 2017 a 2025, as regras bloqueantes reprovaram zero linhas. As três com tratamento reprovaram os mesmos números que a Fase 0 tinha contado com a biblioteca padrão: 57 coordenadas em 2017, 1 ou 2 classificações ausentes por ano e entre 3.098 e 4.572 linhas por ano com `pessoas` menor que a soma (`resultados/fase2_qualidade.csv`, uma linha por ano e regra).
+
+Cada regra bloqueante tem um teste em `tests/test_qualidade.py` que estraga uma linha de uma silver válida e confere que a regra pega aquela linha e que `verificar` para. O dia da semana coerente com a data não estava na lista da Fase 0. Entrou porque o modelo vai usar o dia, e o teste custa uma linha.
+
+## Gold
+
+`src/gold.py`. Recorte de 2019 a 2025, filtrado por `ano` e não por `serie_estavel`: o filtro por série deixaria entrar 2018 de abril em diante, um ano pela metade.
+
+**`gold_ocorrencias_modelo`**: uma linha por ocorrência, 473.813 linhas, com o alvo `grave`. As colunas ficam em grupos (`resultados/fase2_esquema_gold_modelo.csv`, coluna `papel`):
+
+| Grupo | Colunas | Por quê |
+|---|---|---|
+| identificação | `id`, `data` | chave e data para separar treino e teste no tempo |
+| contexto | ano, mês, dia da semana, fim de semana, hora, fase do dia, UF, BR, km, trecho de 10 km, município, coordenadas, sentido, tipo de pista, traçado, uso do solo, clima | onde e quando, conhecido antes do acidente |
+| dinâmica | `causa_acidente`, `tipo_acidente`, `veiculos` | o que o policial registrou sobre o acidente. Não diz quantos se feriram, mas só existe depois do fato. Fica separado para o modelo poder ser treinado com e sem esse grupo |
+| alvo | `grave` | `mortos > 0 ou feridos_graves > 0` |
+
+Ficam fora, de propósito, as colunas de desfecho: contagens de mortos, feridos, ilesos e ignorados, `pessoas`, `total_envolvidos` e as classificações. Elas são o alvo escrito de outro jeito. Um modelo com `mortos` acertaria tudo e não serviria para nada. `verificar_modelo` falha se alguma dessas colunas aparecer na tabela, se um `id` se repetir, se houver ano fora do recorte ou alvo nulo.
+
+**`gold_graves_por_recorte`**: para cada recorte e valor, ocorrências, graves, ocorrências com morto, total de mortos, proporção de graves e intervalo de confiança de 95% pelo método de Wilson. Os recortes são ano, UF, BR, trecho de 10 km, município, hora, dia da semana, mês, fase do dia, clima, tipo de pista, causa e tipo de acidente.
+
+- O trecho leva a UF no nome ("SP BR-116 km 220-230") porque o km de uma BR recomeça em cada estado. O município também leva a UF, porque há nomes repetidos entre estados.
+- Valor ausente vira "(não informado)" em vez de sumir do agrupamento. Assim cada recorte soma o total da gold, o que é conferido em `resultados/fase2_recortes_gold.csv`.
+- Por que proporção e não contagem: a fonte não tem volume de tráfego. Um trecho com muitos acidentes pode só ter muito carro. A proporção de graves entre os acidentes do recorte tem um denominador honesto: dos acidentes que aconteceram ali, quantos foram graves.
+- Por que intervalo de Wilson: num exemplo inventado, um município com 3 acidentes e 2 graves tem 67% de graves, mas o intervalo vai de cerca de 21% a 94%. O intervalo mostra o quanto a proporção é incerta, e o Wilson não sai de 0 a 1 nem quando a amostra é pequena ou a proporção é 0 ou 1. A fórmula está duas vezes, em Python (`src/regras.py`) e em Spark (`src/gold.py`), e um teste confere que as duas dão o mesmo valor.
+
+Um bug apareceu nos testes: com o número de ocorrências inteiro, `n * n` estoura o `int` a partir de 46.341, e o Spark 4 (com o modo ANSI ligado) para com erro. O teste com 72.529 ocorrências pegou o erro. O cálculo agora é feito em `double`.
+
+Numa entrevista, eu diria: "A gold do modelo tem um teste que falha se uma coluna de desfecho entrar. Vazamento do alvo é o erro mais comum em modelo tabular, e é fácil de cometer quando a tabela tem `mortos` do lado de `grave`."
+
 ## Testes
 
-São 80 testes em `tests/`, rodando no container. Para conferir que eles reprovam quando devem, estraguei regras de propósito e voltei o código depois: `grave` sem feridos graves, `total_envolvidos` sem ignorados, a leitura sem `escape='"'` e a expressão da hora aceitando `25:99:00`. Em todos os casos os testes da regra falharam.
+São 129 testes em `tests/`, rodando no container. Para conferir que eles reprovam quando devem, estraguei regras de propósito e voltei o código depois: `grave` sem feridos graves, `total_envolvidos` sem ignorados, a leitura sem `escape='"'`, a expressão da hora aceitando `25:99:00`, a regra de coerência aceitando "Com Vítimas Feridas" com morto e a gold do modelo com a coluna `mortos`. Em todos os casos os testes da regra falharam.
 
 ## Revisão de código
 

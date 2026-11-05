@@ -49,3 +49,20 @@ def dentro_do_brasil(lat: float, lon: float) -> bool:
     if LAT_MIN <= lat <= LAT_MAX and LON_MIN <= lon <= LON_MAX:
         return True
     return NORONHA[0] <= lat <= NORONHA[1] and NORONHA[2] <= lon <= NORONHA[3]
+
+# Nome do dia como a PRF escreve (em minúsculas na silver), na ordem do
+# dayofweek do Spark: 1 = domingo ... 7 = sábado.
+DIAS_SEMANA = ["domingo", "segunda-feira", "terça-feira", "quarta-feira",
+               "quinta-feira", "sexta-feira", "sábado"]
+
+# Nível de confiança dos intervalos de Wilson nos agregados (95%).
+Z_95 = 1.959963984540054
+
+
+def wilson(graves: int, n: int, z: float = Z_95) -> tuple[float, float]:
+    """Intervalo de Wilson para a proporção graves/n (referência para o teste do Spark)."""
+    p = graves / n
+    denom = 1 + z * z / n
+    centro = (p + z * z / (2 * n)) / denom
+    meia = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / denom
+    return max(0.0, centro - meia), min(1.0, centro + meia)

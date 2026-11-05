@@ -12,7 +12,11 @@ Saídas em resultados/:
   distintos contados pelo Spark na bronze contra os da Fase 0;
 - fase1_conferencia_silver.csv: por ano, contagens da silver contra a Fase 0;
 - fase1_esquema_silver.csv: colunas e tipos da silver;
-- fase1_ids_corrigidos.csv: evidência para cada id em notação científica.
+- fase1_ids_corrigidos.csv: evidência para cada id em notação científica;
+- fase2_qualidade.csv: por ano e regra de src/qualidade.py, linhas reprovadas;
+- fase2_conferencia_gold.csv: ocorrências e graves por ano, silver x gold;
+- fase2_recortes_gold.csv: cada recorte do agregado soma o total da gold;
+- fase2_esquema_gold_modelo.csv: colunas, tipos e papel de cada coluna.
 """
 from __future__ import annotations
 
@@ -26,6 +30,8 @@ from pyspark.sql import functions as F
 
 from src.bronze import agora_utc, extrair_zip, montar_bronze, zips_do_recorte
 from src.regras import COLUNAS_FONTE
+from src.gold import ALVO, CONTEXTO, DINAMICA, agregar, montar_modelo, verificar_modelo
+from src.qualidade import bloqueios, contar_violacoes
 from src.silver import transformar, ultima_ingestao, validar_bronze
 
 
@@ -173,9 +179,59 @@ def main() -> None:
 
     for r in saida:
         print(r)
-    spark.stop()
     if divergentes or not all(r["bate_com_fase0"] for r in saida):
         raise SystemExit("conferência com a Fase 0 falhou: ver resultados/fase1_conferencia_*.csv")
+
+    fase2(spark, silver, args.lake, args.resultados)
+    spark.stop()
+
+
+def fase2(spark: SparkSession, silver: DataFrame, lake: Path, resultados: Path) -> None:
+    # Testes de qualidade na silver inteira (2017 a 2025). A contagem é gravada
+    # antes de decidir, para que uma reprovação fique registrada.
+    contagens = contar_violacoes(silver)
+    gravar_csv(resultados / "fase2_qualidade.csv", contagens)
+    falhas = bloqueios(contagens)
+    print("qualidade, regras com reprovação:",
+          {c["regra"] for c in contagens if c["linhas_reprovadas"]}, "bloqueios:", falhas)
+    if falhas:
+        raise SystemExit(f"regras bloqueantes reprovaram linhas: {falhas}")
+
+    montar_modelo(silver).write.format("delta").mode("overwrite").option("overwriteSchema", "true")         .save(str(lake / "gold_ocorrencias_modelo"))
+    modelo = spark.read.format("delta").load(str(lake / "gold_ocorrencias_modelo"))
+    contrato = verificar_modelo(modelo)
+    print("gold do modelo:", contrato)
+
+    agregar(silver).write.format("delta").mode("overwrite").option("overwriteSchema", "true")         .save(str(lake / "gold_graves_por_recorte"))
+    agregado = spark.read.format("delta").load(str(lake / "gold_graves_por_recorte"))
+
+    # silver x gold por ano: nenhuma ocorrência dos anos da análise some ou aparece.
+    s = {r["ano"]: r for r in silver.groupBy("ano").agg(
+        F.count("*").alias("n"), F.sum(F.col("grave").cast("int")).alias("g")).collect()}
+    conf = []
+    for r in modelo.groupBy("ano").agg(F.count("*").alias("n"),
+                                       F.sum(F.col("grave").cast("int")).alias("g")).orderBy("ano").collect():
+        conf.append({"ano": r["ano"], "ocorrencias_silver": s[r["ano"]]["n"], "ocorrencias_gold": r["n"],
+                     "graves_silver": s[r["ano"]]["g"], "graves_gold": r["g"],
+                     "bate": (s[r["ano"]]["n"], s[r["ano"]]["g"]) == (r["n"], r["g"])})
+    gravar_csv(resultados / "fase2_conferencia_gold.csv", conf)
+
+    total_n, total_g = contrato["linhas"], sum(c["graves_gold"] for c in conf)
+    rec = [{"recorte": r["recorte"], "valores": r["valores"], "ocorrencias": r["n"], "graves": r["g"],
+            "bate_com_total": (r["n"], r["g"]) == (total_n, total_g)}
+           for r in agregado.groupBy("recorte").agg(
+               F.count("*").alias("valores"), F.sum("ocorrencias").alias("n"),
+               F.sum("graves").alias("g")).orderBy("recorte").collect()]
+    gravar_csv(resultados / "fase2_recortes_gold.csv", rec)
+
+    papel = {c: "contexto" for c in CONTEXTO} | {c: "dinamica" for c in DINAMICA} | {ALVO: "alvo"}
+    gravar_csv(resultados / "fase2_esquema_gold_modelo.csv",
+               [{"coluna": c, "tipo": t, "papel": papel.get(c, "identificacao")} for c, t in modelo.dtypes])
+
+    for c in conf + rec:
+        print(c)
+    if not all(c["bate"] for c in conf) or not all(r["bate_com_total"] for r in rec):
+        raise SystemExit("gold não fecha com a silver: ver resultados/fase2_*.csv")
 
 
 if __name__ == "__main__":

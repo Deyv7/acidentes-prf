@@ -1,10 +1,13 @@
-"""Compara a saída do notebook 02_silver no Databricks com a execução local.
+"""Compara a saída dos notebooks 02_silver e 03_gold no Databricks com a execução local.
 
-Lê o JSON de `databricks jobs get-run-output` da tarefa silver e
-resultados/fase1_conferencia_silver.csv (gerado por src/executar_local.py) e
-grava resultados/fase1_conferencia_databricks.csv. Sai com erro se algo não bater.
+Lê o JSON de `databricks jobs get-run-output` das tarefas silver e gold e os
+CSVs gerados por src/executar_local.py, e grava:
+- resultados/fase1_conferencia_databricks.csv (silver, por ano);
+- resultados/fase2_conferencia_databricks.csv (qualidade por ano e regra,
+  gold por ano e por recorte).
+Sai com erro se algo não bater.
 
-Uso: python -I src/conferir_databricks.py <saida_da_tarefa.json> <pasta_resultados>
+Uso: python -I src/conferir_databricks.py <saida_silver.json> <saida_gold.json> <pasta_resultados>
 """
 from __future__ import annotations
 
@@ -20,12 +23,25 @@ LOCAL = {"ocorrencias": "ocorrencias_silver", "graves": "graves_silver",
          "com_morto": "com_morto_silver"}
 
 
-def main(saida_json: Path, resultados: Path) -> int:
-    saida = json.loads(saida_json.read_text(encoding="utf-8"))
-    remoto = json.loads(saida["notebook_output"]["result"])
-    local = {int(r["ano"]): r for r in
-             csv.DictReader(open(resultados / "fase1_conferencia_silver.csv", encoding="utf-8"))}
+def ler_saida(caminho: Path) -> dict:
+    saida = json.loads(caminho.read_text(encoding="utf-8"))
+    return json.loads(saida["notebook_output"]["result"])
 
+
+def ler_csv(caminho: Path) -> list[dict]:
+    with open(caminho, encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def gravar(caminho: Path, linhas: list[dict]) -> None:
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(linhas[0]), lineterminator="\n")
+        w.writeheader()
+        w.writerows(linhas)
+
+
+def conferir_silver(remoto: dict, resultados: Path) -> bool:
+    local = {int(r["ano"]): r for r in ler_csv(resultados / "fase1_conferencia_silver.csv")}
     linhas = []
     for r in remoto["por_ano"]:
         loc = local.get(r["ano"])
@@ -35,15 +51,50 @@ def main(saida_json: Path, resultados: Path) -> int:
     ok = (set(local) == {r["ano"] for r in linhas}
           and all(r["bate_com_local"] for r in linhas)
           and remoto["linhas_bronze_vigente"] == total_remoto)
+    gravar(resultados / "fase1_conferencia_databricks.csv", linhas)
+    print(f"silver: bronze vigente {remoto['linhas_bronze_vigente']}, silver {total_remoto}, "
+          f"bate com local: {ok}")
+    return ok
 
-    with open(resultados / "fase1_conferencia_databricks.csv", "w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(linhas[0]), lineterminator="\n")
-        w.writeheader()
-        w.writerows(linhas)
-    print(f"bronze vigente no Databricks: {remoto['linhas_bronze_vigente']} linhas; "
-          f"silver: {total_remoto}; bate com local: {ok}")
-    return 0 if ok else 1
+
+def conferir_gold(remoto: dict, resultados: Path) -> bool:
+    linhas = []
+    qual_local = {(int(r["ano"]), r["regra"]): int(r["linhas_reprovadas"])
+                  for r in ler_csv(resultados / "fase2_qualidade.csv")}
+    for q in remoto["qualidade"]:
+        loc = qual_local.get((q["ano"], q["regra"]))
+        linhas.append({"tabela": "qualidade", "chave": f"{q['ano']} {q['regra']}",
+                       "databricks": q["linhas_reprovadas"], "local": loc,
+                       "bate": loc == q["linhas_reprovadas"]})
+    gold_local = {int(r["ano"]): r for r in ler_csv(resultados / "fase2_conferencia_gold.csv")}
+    for r in remoto["por_ano"]:
+        loc = gold_local.get(r["ano"], {})
+        for medida, col in (("ocorrencias", "ocorrencias_gold"), ("graves", "graves_gold")):
+            v = int(loc[col]) if col in loc else None
+            linhas.append({"tabela": "gold_ocorrencias_modelo", "chave": f"{r['ano']} {medida}",
+                           "databricks": r[medida], "local": v, "bate": v == r[medida]})
+    rec_local = {r["recorte"]: r for r in ler_csv(resultados / "fase2_recortes_gold.csv")}
+    for r in remoto["por_recorte"]:
+        loc = rec_local.get(r["recorte"], {})
+        for medida in ("valores", "ocorrencias", "graves"):
+            v = int(loc[medida]) if medida in loc else None
+            linhas.append({"tabela": "gold_graves_por_recorte", "chave": f"{r['recorte']} {medida}",
+                           "databricks": r[medida], "local": v, "bate": v == r[medida]})
+    ok = (len(remoto["qualidade"]) == len(qual_local)
+          and {r["ano"] for r in remoto["por_ano"]} == set(gold_local)
+          and {r["recorte"] for r in remoto["por_recorte"]} == set(rec_local)
+          and all(l["bate"] for l in linhas))
+    gravar(resultados / "fase2_conferencia_databricks.csv", linhas)
+    print(f"gold: {len(linhas)} números comparados, {sum(not l['bate'] for l in linhas)} divergentes; "
+          f"bate com local: {ok}")
+    return ok
+
+
+def main(silver_json: Path, gold_json: Path, resultados: Path) -> int:
+    ok_silver = conferir_silver(ler_saida(silver_json), resultados)
+    ok_gold = conferir_gold(ler_saida(gold_json), resultados)
+    return 0 if ok_silver and ok_gold else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main(Path(sys.argv[1]), Path(sys.argv[2])))
+    sys.exit(main(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])))

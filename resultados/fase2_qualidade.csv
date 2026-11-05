@@ -1,0 +1,118 @@
+ano,regra,linhas,linhas_reprovadas,bloqueante,tratamento
+2017,id_nulo,89567,0,True,
+2017,id_duplicado,89567,0,True,
+2017,data_fora_do_ano_do_arquivo,89567,0,True,
+2017,dia_semana_incoerente,89567,0,True,
+2017,contagem_negativa_ou_nula,89567,0,True,
+2017,feridos_diferente_de_leves_mais_graves,89567,0,True,
+2017,classificacao_incoerente,89567,0,True,
+2017,classificacao_ausente,89567,1,False,classificação derivada das contagens; classificacao_imputada = true
+2017,coordenada_fora_do_brasil_ou_ausente,89567,57,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2017,coordenada_valida_fora_do_brasil,89567,0,True,
+2017,pessoas_menor_que_total,89567,4572,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2017,pessoas_maior_que_total,89567,0,True,
+2017,grave_nulo,89567,0,True,
+2018,id_nulo,69333,0,True,
+2018,id_duplicado,69333,0,True,
+2018,data_fora_do_ano_do_arquivo,69333,0,True,
+2018,dia_semana_incoerente,69333,0,True,
+2018,contagem_negativa_ou_nula,69333,0,True,
+2018,feridos_diferente_de_leves_mais_graves,69333,0,True,
+2018,classificacao_incoerente,69333,0,True,
+2018,classificacao_ausente,69333,1,False,classificação derivada das contagens; classificacao_imputada = true
+2018,coordenada_fora_do_brasil_ou_ausente,69333,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2018,coordenada_valida_fora_do_brasil,69333,0,True,
+2018,pessoas_menor_que_total,69333,3519,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2018,pessoas_maior_que_total,69333,0,True,
+2018,grave_nulo,69333,0,True,
+2019,id_nulo,67558,0,True,
+2019,id_duplicado,67558,0,True,
+2019,data_fora_do_ano_do_arquivo,67558,0,True,
+2019,dia_semana_incoerente,67558,0,True,
+2019,contagem_negativa_ou_nula,67558,0,True,
+2019,feridos_diferente_de_leves_mais_graves,67558,0,True,
+2019,classificacao_incoerente,67558,0,True,
+2019,classificacao_ausente,67558,1,False,classificação derivada das contagens; classificacao_imputada = true
+2019,coordenada_fora_do_brasil_ou_ausente,67558,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2019,coordenada_valida_fora_do_brasil,67558,0,True,
+2019,pessoas_menor_que_total,67558,3098,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2019,pessoas_maior_que_total,67558,0,True,
+2019,grave_nulo,67558,0,True,
+2020,id_nulo,63585,0,True,
+2020,id_duplicado,63585,0,True,
+2020,data_fora_do_ano_do_arquivo,63585,0,True,
+2020,dia_semana_incoerente,63585,0,True,
+2020,contagem_negativa_ou_nula,63585,0,True,
+2020,feridos_diferente_de_leves_mais_graves,63585,0,True,
+2020,classificacao_incoerente,63585,0,True,
+2020,classificacao_ausente,63585,2,False,classificação derivada das contagens; classificacao_imputada = true
+2020,coordenada_fora_do_brasil_ou_ausente,63585,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2020,coordenada_valida_fora_do_brasil,63585,0,True,
+2020,pessoas_menor_que_total,63585,3340,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2020,pessoas_maior_que_total,63585,0,True,
+2020,grave_nulo,63585,0,True,
+2021,id_nulo,64567,0,True,
+2021,id_duplicado,64567,0,True,
+2021,data_fora_do_ano_do_arquivo,64567,0,True,
+2021,dia_semana_incoerente,64567,0,True,
+2021,contagem_negativa_ou_nula,64567,0,True,
+2021,feridos_diferente_de_leves_mais_graves,64567,0,True,
+2021,classificacao_incoerente,64567,0,True,
+2021,classificacao_ausente,64567,1,False,classificação derivada das contagens; classificacao_imputada = true
+2021,coordenada_fora_do_brasil_ou_ausente,64567,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2021,coordenada_valida_fora_do_brasil,64567,0,True,
+2021,pessoas_menor_que_total,64567,3517,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2021,pessoas_maior_que_total,64567,0,True,
+2021,grave_nulo,64567,0,True,
+2022,id_nulo,64606,0,True,
+2022,id_duplicado,64606,0,True,
+2022,data_fora_do_ano_do_arquivo,64606,0,True,
+2022,dia_semana_incoerente,64606,0,True,
+2022,contagem_negativa_ou_nula,64606,0,True,
+2022,feridos_diferente_de_leves_mais_graves,64606,0,True,
+2022,classificacao_incoerente,64606,0,True,
+2022,classificacao_ausente,64606,1,False,classificação derivada das contagens; classificacao_imputada = true
+2022,coordenada_fora_do_brasil_ou_ausente,64606,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2022,coordenada_valida_fora_do_brasil,64606,0,True,
+2022,pessoas_menor_que_total,64606,3547,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2022,pessoas_maior_que_total,64606,0,True,
+2022,grave_nulo,64606,0,True,
+2023,id_nulo,67766,0,True,
+2023,id_duplicado,67766,0,True,
+2023,data_fora_do_ano_do_arquivo,67766,0,True,
+2023,dia_semana_incoerente,67766,0,True,
+2023,contagem_negativa_ou_nula,67766,0,True,
+2023,feridos_diferente_de_leves_mais_graves,67766,0,True,
+2023,classificacao_incoerente,67766,0,True,
+2023,classificacao_ausente,67766,1,False,classificação derivada das contagens; classificacao_imputada = true
+2023,coordenada_fora_do_brasil_ou_ausente,67766,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2023,coordenada_valida_fora_do_brasil,67766,0,True,
+2023,pessoas_menor_que_total,67766,3767,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2023,pessoas_maior_que_total,67766,0,True,
+2023,grave_nulo,67766,0,True,
+2024,id_nulo,73202,0,True,
+2024,id_duplicado,73202,0,True,
+2024,data_fora_do_ano_do_arquivo,73202,0,True,
+2024,dia_semana_incoerente,73202,0,True,
+2024,contagem_negativa_ou_nula,73202,0,True,
+2024,feridos_diferente_de_leves_mais_graves,73202,0,True,
+2024,classificacao_incoerente,73202,0,True,
+2024,classificacao_ausente,73202,1,False,classificação derivada das contagens; classificacao_imputada = true
+2024,coordenada_fora_do_brasil_ou_ausente,73202,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2024,coordenada_valida_fora_do_brasil,73202,0,True,
+2024,pessoas_menor_que_total,73202,3887,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2024,pessoas_maior_que_total,73202,0,True,
+2024,grave_nulo,73202,0,True,
+2025,id_nulo,72529,0,True,
+2025,id_duplicado,72529,0,True,
+2025,data_fora_do_ano_do_arquivo,72529,0,True,
+2025,dia_semana_incoerente,72529,0,True,
+2025,contagem_negativa_ou_nula,72529,0,True,
+2025,feridos_diferente_de_leves_mais_graves,72529,0,True,
+2025,classificacao_incoerente,72529,0,True,
+2025,classificacao_ausente,72529,1,False,classificação derivada das contagens; classificacao_imputada = true
+2025,coordenada_fora_do_brasil_ou_ausente,72529,0,False,"latitude e longitude anuladas; a ocorrência fica (UF, BR e km são bons)"
+2025,coordenada_valida_fora_do_brasil,72529,0,True,
+2025,pessoas_menor_que_total,72529,3823,False,"as análises usam total_envolvidos, que fecha com o arquivo por pessoa"
+2025,pessoas_maior_que_total,72529,0,True,
+2025,grave_nulo,72529,0,True,

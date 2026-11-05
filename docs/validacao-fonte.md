@@ -132,7 +132,7 @@ O arquivo por pessoa de 2025 confirma as contagens. As 72.529 ocorrências apare
 
 ## Testes de qualidade na fonte real
 
-Linhas reprovadas em cada ano (`fase0_qualidade_<ano>.csv`):
+Linhas reprovadas em cada ano (`fase0_qualidade_<ano>.csv`). Na Fase 2, essas regras viraram testes que rodam no pipeline (`src/qualidade.py`, explicados em `docs/explicacao.md`). Na silver de 2017 a 2025, eles reprovam os mesmos números (`fase2_qualidade.csv`):
 
 Os testes abaixo deram 0 linhas reprovadas em todos os anos de 2017 a 2026, e o teste vai falhar se alguma aparecer: `id` nulo, `id` duplicado, coordenada nula ou inválida, data inválida ou fora do ano do arquivo, contagem de vítimas negativa ou nula, "Com Vítimas Fatais" com `mortos = 0`, "Sem Vítimas" com morto ou ferido e `feridos ≠ feridos_leves + feridos_graves`.
 
