@@ -66,3 +66,29 @@ def wilson(graves: int, n: int, z: float = Z_95) -> tuple[float, float]:
     centro = (p + z * z / (2 * n)) / denom
     meia = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / denom
     return max(0.0, centro - meia), min(1.0, centro + meia)
+
+# Em janeiro de 2021 a PRF trocou a lista de causas: as ~30 causas amplas de
+# 2019-2020 ("Falta de Atenção à Condução") deram lugar a ~70 mais finas
+# ("Reação tardia...", "Ausência de reação..."), sem correspondência 1 para 1
+# (resultados/fase3_categorias_por_ano.csv e fase3_transicao_por_mes.csv).
+# A causa só é comparada de 2021 em diante.
+INICIO_LISTA_CAUSAS = 2021
+
+# Renomeações dentro da lista nova de causas (mesmo conceito, outro nome).
+CAUSA_PADRONIZADA = {
+    "Transitar no Acostamento": "Transitar no acostamento",
+    "Ingestão de álcool e/ou substâncias psicoativas pelo pedestre":
+        "Ingestão de álcool ou de substâncias psicoativas pelo pedestre",
+    "Pedestre - Ingestão de álcool/ substâncias psicoativas":
+        "Ingestão de álcool ou de substâncias psicoativas pelo pedestre",
+}
+
+# O tipo de acidente mudou entre janeiro e fevereiro de 2021: "Colisão lateral"
+# foi dividida por sentido e os dois tipos de colisão com objeto foram unidos.
+# Juntar as categorias finas na ampla é seguro nos dois sentidos do tempo.
+TIPO_PADRONIZADO = {
+    "Colisão lateral mesmo sentido": "Colisão lateral",
+    "Colisão lateral sentido oposto": "Colisão lateral",
+    "Colisão com objeto estático": "Colisão com objeto",
+    "Colisão com objeto em movimento": "Colisão com objeto",
+}

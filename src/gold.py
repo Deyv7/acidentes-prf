@@ -16,11 +16,13 @@ de 2018 e deixar um ano pela metade.
 from __future__ import annotations
 
 from functools import reduce
+from itertools import chain
 
 from pyspark.sql import Column, DataFrame
 from pyspark.sql import functions as F
 
-from src.regras import ANOS_ANALISE, Z_95
+from src.regras import (ANOS_ANALISE, CAUSA_PADRONIZADA, INICIO_LISTA_CAUSAS,
+                        TIPO_PADRONIZADO, Z_95)
 
 ALVO = "grave"
 IDENTIFICACAO = ["id", "data"]
@@ -33,7 +35,9 @@ CONTEXTO = ["ano", "mes", "dia_semana", "dia_semana_num", "fim_de_semana", "hora
 # Dinâmica: o que o policial registrou sobre o acidente em si. Não é desfecho
 # (não diz quantos morreram), mas só existe depois do acidente. Fica separado
 # para o modelo poder ser treinado com e sem essas colunas.
-DINAMICA = ["causa_acidente", "tipo_acidente", "veiculos"]
+# Causa e tipo entram padronizados (ver src/regras.py): a causa é nula antes
+# de 2021, porque a lista antiga não tem correspondência com a nova.
+DINAMICA = ["causa_padronizada", "tipo_padronizado", "veiculos"]
 
 # Desfecho: nunca entra na gold do modelo (vazamento do alvo).
 DESFECHO = ["classificacao_acidente", "classificacao", "classificacao_imputada", "pessoas",
@@ -42,16 +46,26 @@ DESFECHO = ["classificacao_acidente", "classificacao", "classificacao_imputada",
 
 TAMANHO_TRECHO_KM = 10
 NAO_INFORMADO = "(não informado)"
+LISTA_ANTIGA = f"(lista de causas anterior a {INICIO_LISTA_CAUSAS})"
 
 
 class GoldInvalida(ValueError):
     """A gold não cumpre o contrato (id único, anos do recorte, alvo preenchido)."""
 
 
+def _padronizar(coluna: str, mapa: dict[str, str]) -> Column:
+    m = F.create_map(*[F.lit(x) for x in chain.from_iterable(mapa.items())])
+    return F.coalesce(m[F.col(coluna)], F.col(coluna))
+
+
 def preparar(silver: DataFrame) -> DataFrame:
     """Silver dos anos da análise com as colunas derivadas que a gold usa."""
     return (silver
             .where(F.col("ano").isin(ANOS_ANALISE))
+            .withColumn("causa_padronizada",
+                        F.when(F.col("ano") >= INICIO_LISTA_CAUSAS,
+                               _padronizar("causa_acidente", CAUSA_PADRONIZADA)))
+            .withColumn("tipo_padronizado", _padronizar("tipo_acidente", TIPO_PADRONIZADO))
             .withColumn("dia_semana_num", F.dayofweek("data"))  # 1 = domingo
             .withColumn("fim_de_semana", F.dayofweek("data").isin(1, 7))
             .withColumn("trecho_km",
@@ -120,16 +134,19 @@ def recortes() -> dict[str, Column]:
         "fase_dia": _txt("fase_dia"),
         "condicao_meteorologica": _txt("condicao_meteorologica"),
         "tipo_pista": _txt("tipo_pista"),
-        "causa_acidente": _txt("causa_acidente"),
-        "tipo_acidente": _txt("tipo_acidente"),
+        # 2019-2020 ficam num grupo só: a lista de causas era outra
+        "causa_acidente": F.when(F.col("ano") < INICIO_LISTA_CAUSAS, F.lit(LISTA_ANTIGA))
+                           .otherwise(_txt("causa_padronizada")),
+        "tipo_acidente": _txt("tipo_padronizado"),
     }
 
 
 def agregar(silver: DataFrame) -> DataFrame:
-    """Uma linha por (recorte, valor): ocorrências, graves, com morto, % graves e IC 95%."""
+    """Uma linha por (recorte, valor): ocorrências, graves, com morto, % graves e IC 95%,
+    e a mesma proporção calculada só entre os acidentes com vítima."""
     base = preparar(silver)
     partes = [
-        base.select(F.lit(nome).alias("recorte"), expr.alias("valor"), ALVO, "mortos")
+        base.select(F.lit(nome).alias("recorte"), expr.alias("valor"), ALVO, "mortos", "feridos")
         for nome, expr in recortes().items()
     ]
     longo = reduce(DataFrame.unionByName, partes)
@@ -138,9 +155,17 @@ def agregar(silver: DataFrame) -> DataFrame:
         F.sum(F.col(ALVO).cast("int")).alias("graves"),
         F.sum((F.col("mortos") > 0).cast("int")).alias("com_morto"),
         F.sum("mortos").alias("mortos"),
+        F.sum(((F.col("mortos") > 0) | (F.col("feridos") > 0)).cast("int")).alias("com_vitima"),
     ))
     inf, sup = intervalo_wilson(F.col("graves"), F.col("ocorrencias"))
+    # Robustez: % de graves só entre acidentes com vítima. Não depende de
+    # quantos acidentes sem vítima chegam a ser registrados em cada lugar.
+    inf_v, sup_v = intervalo_wilson(F.col("graves"), F.col("com_vitima"))
+    tem_vitima = F.col("com_vitima") > 0
     return (agg
             .withColumn("pct_graves", F.col("graves") / F.col("ocorrencias"))
             .withColumn("ic95_inf", inf)
-            .withColumn("ic95_sup", sup))
+            .withColumn("ic95_sup", sup)
+            .withColumn("pct_graves_com_vitima", F.when(tem_vitima, F.col("graves") / F.col("com_vitima")))
+            .withColumn("ic95_inf_com_vitima", F.when(tem_vitima, inf_v))
+            .withColumn("ic95_sup_com_vitima", F.when(tem_vitima, sup_v)))

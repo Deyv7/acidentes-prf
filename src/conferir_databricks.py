@@ -4,10 +4,12 @@ Lê o JSON de `databricks jobs get-run-output` das tarefas silver e gold e os
 CSVs gerados por src/executar_local.py, e grava:
 - resultados/fase1_conferencia_databricks.csv (silver, por ano);
 - resultados/fase2_conferencia_databricks.csv (qualidade por ano e regra,
-  gold por ano e por recorte).
+  gold por ano e por recorte);
+- resultados/fase3_conferencia_databricks.csv (resumo da análise por recorte).
 Sai com erro se algo não bater.
 
-Uso: python -I src/conferir_databricks.py <saida_silver.json> <saida_gold.json> <pasta_resultados>
+Uso: python -I src/conferir_databricks.py <saida_silver.json> <saida_gold.json> \
+         <saida_analise.json> <pasta_resultados>
 """
 from __future__ import annotations
 
@@ -90,11 +92,34 @@ def conferir_gold(remoto: dict, resultados: Path) -> bool:
     return ok
 
 
-def main(silver_json: Path, gold_json: Path, resultados: Path) -> int:
+def conferir_analise(remoto: dict, resultados: Path) -> bool:
+    local = {r["recorte"]: r for r in ler_csv(resultados / "fase3_resumo_recortes.csv")}
+    linhas = []
+    for r in remoto["resumo"]:
+        loc = local.get(r["recorte"], {})
+        for medida, v in r.items():
+            if medida == "recorte":
+                continue
+            lv = loc.get(medida)
+            if medida.startswith("media"):  # proporção: compara com tolerância
+                bate = lv is not None and abs(float(lv) - v) < 1e-9
+            else:
+                bate = lv is not None and int(lv) == v
+            linhas.append({"recorte": r["recorte"], "medida": medida, "databricks": v,
+                           "local": lv, "bate": bate})
+    ok = {r["recorte"] for r in remoto["resumo"]} == set(local) and all(l["bate"] for l in linhas)
+    gravar(resultados / "fase3_conferencia_databricks.csv", linhas)
+    print(f"análise: {len(linhas)} números comparados, {sum(not l['bate'] for l in linhas)} divergentes; "
+          f"bate com local: {ok}")
+    return ok
+
+
+def main(silver_json: Path, gold_json: Path, analise_json: Path, resultados: Path) -> int:
     ok_silver = conferir_silver(ler_saida(silver_json), resultados)
     ok_gold = conferir_gold(ler_saida(gold_json), resultados)
-    return 0 if ok_silver and ok_gold else 1
+    ok_analise = conferir_analise(ler_saida(analise_json), resultados)
+    return 0 if ok_silver and ok_gold and ok_analise else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])))
+    sys.exit(main(*(Path(a) for a in sys.argv[1:5])))

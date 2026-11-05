@@ -136,7 +136,7 @@ gold_graves_por_recorte,ano graves,132637,132637,True
 gold_graves_por_recorte,br valores,130,130,True
 gold_graves_por_recorte,br ocorrencias,473813,473813,True
 gold_graves_por_recorte,br graves,132637,132637,True
-gold_graves_por_recorte,causa_acidente valores,91,91,True
+gold_graves_por_recorte,causa_acidente valores,74,74,True
 gold_graves_por_recorte,causa_acidente ocorrencias,473813,473813,True
 gold_graves_por_recorte,causa_acidente graves,132637,132637,True
 gold_graves_por_recorte,condicao_meteorologica valores,10,10,True
@@ -157,7 +157,7 @@ gold_graves_por_recorte,mes graves,132637,132637,True
 gold_graves_por_recorte,municipio valores,2129,2129,True
 gold_graves_por_recorte,municipio ocorrencias,473813,473813,True
 gold_graves_por_recorte,municipio graves,132637,132637,True
-gold_graves_por_recorte,tipo_acidente valores,22,22,True
+gold_graves_por_recorte,tipo_acidente valores,18,18,True
 gold_graves_por_recorte,tipo_acidente ocorrencias,473813,473813,True
 gold_graves_por_recorte,tipo_acidente graves,132637,132637,True
 gold_graves_por_recorte,tipo_pista valores,3,3,True

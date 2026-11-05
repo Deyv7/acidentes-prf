@@ -1,0 +1,114 @@
+coluna,valor,2019,2020,2021,2022,2023,2024,2025
+causa_acidente,Acessar a via sem observar a presença dos outros veículos,0,18,5198,5590,6325,6961,7097
+causa_acidente,Acesso irregular,0,4,550,660,713,829,768
+causa_acidente,Acostamento em desnível,0,1,205,172,170,176,167
+causa_acidente,Acumulo de areia ou detritos sobre o pavimento,1,2,252,226,277,282,308
+causa_acidente,Acumulo de água sobre o pavimento,0,2,573,597,579,583,477
+causa_acidente,Acumulo de óleo sobre o pavimento,0,1,161,162,188,248,228
+causa_acidente,Afundamento ou ondulação no pavimento,0,2,181,178,199,169,206
+causa_acidente,Agressão Externa,384,342,0,0,0,0,0
+causa_acidente,Animais na Pista,1534,1413,1214,1274,1329,1469,1305
+causa_acidente,Ausência de reação do condutor,1,28,5615,7556,9326,10670,11469
+causa_acidente,Ausência de sinalização,0,1,189,183,249,198,178
+causa_acidente,Avarias e/ou desgaste excessivo no pneu,801,904,1256,1174,1270,1239,1176
+causa_acidente,Carga excessiva e/ou mal acondicionada,305,377,313,295,254,283,256
+causa_acidente,Chuva,1,6,1286,1138,1048,1145,1020
+causa_acidente,Condutor Dormindo,2483,2110,2311,2165,2094,2135,2116
+causa_acidente,Condutor deixou de manter distância do veículo da frente,0,22,5120,4336,4272,4460,4413
+causa_acidente,Condutor desrespeitou a iluminação vermelha do semáforo,0,4,319,262,233,291,268
+causa_acidente,Condutor usando celular,0,1,125,121,128,120,189
+causa_acidente,Conversão proibida,0,7,874,822,883,968,1018
+causa_acidente,Curva acentuada,0,1,325,251,233,201,203
+causa_acidente,Declive acentuado,0,0,40,34,25,19,19
+causa_acidente,Defeito Mecânico no Veículo,3742,3742,0,0,0,0,0
+causa_acidente,Defeito na Via,978,960,0,0,0,0,0
+causa_acidente,Deficiência do Sistema de Iluminação/Sinalização,0,1,183,198,161,179,165
+causa_acidente,Deficiência ou não Acionamento do Sistema de Iluminação/Sinalização do Veículo,159,187,0,0,0,0,0
+causa_acidente,Deixar de acionar o farol da motocicleta (ou similar),0,0,14,13,11,15,15
+causa_acidente,Demais Fenômenos da natureza,0,1,84,82,80,87,84
+causa_acidente,Demais falhas mecânicas ou elétricas,3,13,2726,2685,2940,3391,3385
+causa_acidente,Demais falhas na via,0,2,224,258,270,280,275
+causa_acidente,Desobediência às normas de trânsito pelo condutor,8106,8800,0,0,0,0,0
+causa_acidente,Desobediência às normas de trânsito pelo pedestre,393,388,0,0,0,0,0
+causa_acidente,Desrespeitar a preferência no cruzamento,0,8,1749,1467,1306,1359,1259
+causa_acidente,Desvio temporário,0,0,55,40,39,26,45
+causa_acidente,Entrada inopinada do pedestre,0,2,577,716,706,661,667
+causa_acidente,Estacionar ou parar em local proibido,0,1,147,153,162,195,182
+causa_acidente,Faixas de trânsito com largura insuficiente,0,0,16,14,9,12,12
+causa_acidente,Falta de Atenção do Pedestre,1971,1641,0,0,0,0,0
+causa_acidente,Falta de Atenção à Condução,25030,22407,0,0,0,0,0
+causa_acidente,Falta de acostamento,0,3,101,85,66,61,60
+causa_acidente,Falta de elemento de contenção que evite a saída do leito carroçável,0,0,74,93,87,67,59
+causa_acidente,Faróis desregulados,0,0,9,7,8,5,9
+causa_acidente,Fenômenos da Natureza,231,221,0,0,0,0,0
+causa_acidente,Frear bruscamente,0,1,452,394,373,351,358
+causa_acidente,Fumaça,0,1,37,33,27,45,31
+causa_acidente,Iluminação deficiente,0,2,161,147,163,165,157
+causa_acidente,Ingestão de Substâncias Psicoativas,94,86,0,0,0,0,0
+causa_acidente,Ingestão de substâncias psicoativas pelo condutor,1,0,99,83,89,73,62
+causa_acidente,Ingestão de Álcool,5420,5070,0,0,0,0,0
+causa_acidente,Ingestão de álcool e/ou substâncias psicoativas pelo pedestre,334,305,297,264,217,0,0
+causa_acidente,Ingestão de álcool ou de substâncias psicoativas pelo pedestre,1,1,114,72,94,0,0
+causa_acidente,Ingestão de álcool pelo condutor,57,60,4589,4350,3599,3855,3685
+causa_acidente,Mal Súbito,718,584,0,0,0,0,0
+causa_acidente,Mal súbito do condutor,0,2,632,524,534,548,546
+causa_acidente,Manobra de mudança de faixa,0,20,3719,3581,3913,4215,4016
+causa_acidente,Modificação proibida,0,0,8,11,15,14,11
+causa_acidente,Neblina,0,0,50,81,48,66,50
+causa_acidente,Não guardar distância de segurança,4222,3606,0,0,0,0,0
+causa_acidente,Objeto estático sobre o leito carroçável,440,446,379,333,321,400,412
+causa_acidente,Obras na pista,1,1,150,114,76,0,0
+causa_acidente,Obstrução Via tentativa Assalto,0,0,0,0,10,0,0
+causa_acidente,Obstrução na via,0,0,108,94,36,0,0
+causa_acidente,Participar de racha,0,0,7,13,10,20,22
+causa_acidente,Pedestre - Ingestão de álcool/ substâncias psicoativas,0,0,0,0,4,169,150
+causa_acidente,Pedestre andava na pista,0,5,701,662,629,664,606
+causa_acidente,Pedestre cruzava a pista fora da faixa,0,1,595,581,594,573,525
+causa_acidente,Pista Escorregadia,2191,2018,680,617,532,642,545
+causa_acidente,Pista em desnível,1,0,79,74,27,0,0
+causa_acidente,Pista esburacada,1,1,349,474,369,236,232
+causa_acidente,Problema com o freio,0,0,360,292,299,282,247
+causa_acidente,Problema na suspensão,0,0,57,71,57,45,38
+causa_acidente,Reação tardia ou ineficiente do condutor,1,34,6909,8418,9855,10937,10799
+causa_acidente,Redutor de velocidade em desacordo,0,0,9,8,11,4,8
+causa_acidente,Restrição de Visibilidade,496,482,0,0,0,0,0
+causa_acidente,Restrição de visibilidade em curvas horizontais,0,0,25,28,20,18,23
+causa_acidente,Restrição de visibilidade em curvas verticais,0,0,12,13,8,6,13
+causa_acidente,Retorno proibido,0,0,301,271,325,382,325
+causa_acidente,Semáforo com defeito,0,0,8,10,7,9,8
+causa_acidente,Sinalização da via insuficiente ou inadequada,247,241,0,0,0,0,0
+causa_acidente,Sinalização encoberta,0,0,3,2,9,3,2
+causa_acidente,Sinalização mal posicionada,0,0,48,36,46,53,61
+causa_acidente,Sistema de drenagem ineficiente,0,0,3,1,2,4,2
+causa_acidente,Suicídio (presumido),0,0,0,0,61,187,190
+causa_acidente,Trafegar com motocicleta (ou similar) entre as faixas,0,5,820,797,1123,1327,1325
+causa_acidente,Transitar na calçada,0,0,11,11,12,9,11
+causa_acidente,Transitar na contramão,3,14,1781,2064,2364,2462,2475
+causa_acidente,Transitar no Acostamento,0,0,0,0,271,488,498
+causa_acidente,Transitar no acostamento,0,4,446,377,0,0,0
+causa_acidente,Transtornos Mentais (exceto suicidio),0,0,0,0,28,51,59
+causa_acidente,Ultrapassagem Indevida,1175,1085,1649,1593,1620,1703,1770
+causa_acidente,Velocidade Incompatível,6032,5887,6742,5003,4240,4348,4088
+causa_acidente,Área urbana sem a presença de local apropriado para a travessia de pedestres,0,0,111,102,88,64,81
+tipo_acidente,Atropelamento de Animal,1243,1159,978,1072,1130,1286,1133
+tipo_acidente,Atropelamento de Pedestre,3384,2843,2912,3045,3132,3172,3057
+tipo_acidente,Capotamento,2279,1860,1752,1563,1504,1468,1373
+tipo_acidente,Colisão com objeto,0,27,4910,4764,4860,5121,5109
+tipo_acidente,Colisão com objeto em movimento,313,255,0,0,0,0,0
+tipo_acidente,Colisão com objeto estático,4464,4889,0,0,0,0,0
+tipo_acidente,Colisão frontal,4409,4431,4345,4467,4632,4862,4739
+tipo_acidente,Colisão lateral,8347,7439,676,0,0,0,0
+tipo_acidente,Colisão lateral mesmo sentido,0,12,5572,6239,7004,7906,7885
+tipo_acidente,Colisão lateral sentido oposto,1,9,1609,1775,2018,2030,2152
+tipo_acidente,Colisão transversal,8784,7822,8021,8008,8470,9389,9306
+tipo_acidente,Colisão traseira,13134,11462,12315,12090,12909,13968,14360
+tipo_acidente,Danos eventuais,182,232,0,0,0,0,0
+tipo_acidente,Derramamento de carga,166,201,156,146,110,110,107
+tipo_acidente,Engavetamento,922,898,1054,1021,1248,1223,1233
+tipo_acidente,Eventos atípicos,1,5,267,339,285,299,287
+tipo_acidente,Incêndio,1115,1177,1174,1305,1463,1715,1771
+tipo_acidente,,17,1,0,0,0,0,0
+tipo_acidente,Queda de ocupante de veículo,3324,2804,2594,2756,3102,3353,3450
+tipo_acidente,Saída de leito carroçável,10312,10494,10657,10502,10199,10840,10209
+tipo_acidente,Sinistro pessoal de trânsito,0,0,0,0,0,13,7
+tipo_acidente,Tombamento,5161,5565,5575,5514,5700,6447,6351

@@ -21,7 +21,7 @@ tipo_pista,string,contexto
 tracado_via,string,contexto
 uso_solo,string,contexto
 condicao_meteorologica,string,contexto
-causa_acidente,string,dinamica
-tipo_acidente,string,dinamica
+causa_padronizada,string,dinamica
+tipo_padronizado,string,dinamica
 veiculos,int,dinamica
 grave,boolean,alvo

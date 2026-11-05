@@ -1,0 +1,4 @@
+valor,ocorrencias,graves,pct_graves,ic95_inf,ic95_sup,media_recorte,comparacao,posicao,com_vitima,pct_graves_com_vitima,ic95_inf_com_vitima,ic95_sup_com_vitima,media_recorte_com_vitima,comparacao_com_vitima,com_morto,mortos
+Simples,233978,77971,0.333241,0.331334,0.335153,0.279935,acima,1,195866,0.398083,0.395918,0.400253,0.337116,acima,22648,27344
+Dupla,197501,45572,0.230743,0.22889,0.232606,0.279935,abaixo,2,161951,0.281394,0.279209,0.283589,0.337116,abaixo,9406,10173
+Múltipla,42334,9094,0.214816,0.210929,0.218754,0.279935,abaixo,3,35629,0.255242,0.250741,0.259795,0.337116,abaixo,1692,1786

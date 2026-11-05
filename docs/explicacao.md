@@ -107,7 +107,7 @@ Por que isso importa: são duas leituras independentes do mesmo arquivo. Se o Sp
 
 ## Execução no Databricks
 
-`databricks/implantar.sh` faz tudo pela CLI: importa os notebooks, cria o schema e os volumes (`00_configurar`), sobe o wheel e os ZIPs de 2017 a 2025 e dispara o job de `databricks/job_pipeline.json`, com a bronze, a silver e a gold em sequência. O notebook `02_silver` confere que a silver tem o mesmo número de linhas da bronze vigente e devolve a contagem por ano como saída. O script busca essa saída pela CLI e `src/conferir_databricks.py` compara com a execução local: ocorrências, graves, com morto, coordenada inválida, id corrigido e classificação imputada batem nos nove anos (`resultados/fase1_conferencia_databricks.csv`, coluna `bate_com_local`). O notebook `03_gold` faz o mesmo com a qualidade e a gold, e todos os números batem (`resultados/fase2_conferencia_databricks.csv`, coluna `bate`).
+`databricks/implantar.sh` faz tudo pela CLI: importa os notebooks, cria o schema e os volumes (`00_configurar`), sobe o wheel e os ZIPs de 2017 a 2025 e dispara o job de `databricks/job_pipeline.json`, com a bronze, a silver, a gold e a análise em sequência. O notebook `02_silver` confere que a silver tem o mesmo número de linhas da bronze vigente e devolve a contagem por ano como saída. O script busca essa saída pela CLI e `src/conferir_databricks.py` compara com a execução local: ocorrências, graves, com morto, coordenada inválida, id corrigido e classificação imputada batem nos nove anos (`resultados/fase1_conferencia_databricks.csv`, coluna `bate_com_local`). Os notebooks `03_gold` e `04_analise` fazem o mesmo com a qualidade, a gold e o resumo da análise, e todos os números batem (`resultados/fase2_conferencia_databricks.csv` e `fase3_conferencia_databricks.csv`, coluna `bate`).
 
 Dois problemas de plataforma apareceram no caminho, e os dois mudaram o desenho.
 
@@ -146,12 +146,14 @@ Cada regra bloqueante tem um teste em `tests/test_qualidade.py` que estraga uma 
 |---|---|---|
 | identificação | `id`, `data` | chave e data para separar treino e teste no tempo |
 | contexto | ano, mês, dia da semana, fim de semana, hora, fase do dia, UF, BR, km, trecho de 10 km, município, coordenadas, sentido, tipo de pista, traçado, uso do solo, clima | onde e quando, conhecido antes do acidente |
-| dinâmica | `causa_acidente`, `tipo_acidente`, `veiculos` | o que o policial registrou sobre o acidente. Não diz quantos se feriram, mas só existe depois do fato. Fica separado para o modelo poder ser treinado com e sem esse grupo |
+| dinâmica | `causa_padronizada`, `tipo_padronizado`, `veiculos` | o que o policial registrou sobre o acidente. Não diz quantos se feriram, mas só existe depois do fato. Fica separado para o modelo poder ser treinado com e sem esse grupo |
 | alvo | `grave` | `mortos > 0 ou feridos_graves > 0` |
 
 Ficam fora, de propósito, as colunas de desfecho: contagens de mortos, feridos, ilesos e ignorados, `pessoas`, `total_envolvidos` e as classificações. Elas são o alvo escrito de outro jeito. Um modelo com `mortos` acertaria tudo e não serviria para nada. `verificar_modelo` falha se alguma dessas colunas aparecer na tabela, se um `id` se repetir, se houver ano fora do recorte ou alvo nulo.
 
-**`gold_graves_por_recorte`**: para cada recorte e valor, ocorrências, graves, ocorrências com morto, total de mortos, proporção de graves e intervalo de confiança de 95% pelo método de Wilson. Os recortes são ano, UF, BR, trecho de 10 km, município, hora, dia da semana, mês, fase do dia, clima, tipo de pista, causa e tipo de acidente.
+**Causa e tipo padronizados.** Em janeiro de 2021 a PRF trocou a lista de causas e, entre janeiro e fevereiro, a de tipos de acidente (`docs/analise.md`, seções "Tipo de acidente" e "Causa"). No tipo, a lista nova só divide ou junta categorias, então juntar as finas nas amplas vale para os dois lados da troca: as três "Colisão lateral…" viram "Colisão lateral". Na causa, a lista antiga tinha ~30 causas amplas e a nova, ~70 mais finas, sem correspondência 1 para 1. Inventar uma correspondência seria pior que não ter o dado. Por isso `causa_padronizada` é nula antes de 2021, e o modelo que usar a causa vai treinar com 2021 em diante. Dentro da lista nova, três renomeações viram um nome só (`CAUSA_PADRONIZADA` em `src/regras.py`). A silver guarda os valores originais.
+
+**`gold_graves_por_recorte`**: para cada recorte e valor, ocorrências, graves, ocorrências com morto, total de mortos, proporção de graves e intervalo de confiança de 95% pelo método de Wilson. Tem também a mesma proporção calculada só entre os acidentes com vítima, com o seu intervalo (ver "Análise" abaixo). Os recortes são ano, UF, BR, trecho de 10 km, município, hora, dia da semana, mês, fase do dia, clima, tipo de pista, causa e tipo de acidente.
 
 - O trecho leva a UF no nome ("SP BR-116 km 220-230") porque o km de uma BR recomeça em cada estado. O município também leva a UF, porque há nomes repetidos entre estados.
 - Valor ausente vira "(não informado)" em vez de sumir do agrupamento. Assim cada recorte soma o total da gold, o que é conferido em `resultados/fase2_recortes_gold.csv`.
@@ -162,13 +164,23 @@ Um bug apareceu nos testes: com o número de ocorrências inteiro, `n * n` estou
 
 Numa entrevista, eu diria: "A gold do modelo tem um teste que falha se uma coluna de desfecho entrar. Vazamento do alvo é o erro mais comum em modelo tabular, e é fácil de cometer quando a tabela tem `mortos` do lado de `grave`."
 
+## Análise
+
+`src/analise.py` lê `gold_graves_por_recorte` e compara cada valor com a média do recorte. O texto com os resultados está em `docs/analise.md`. Três decisões de método:
+
+- **Comparar pelo intervalo, não pelo número.** Um valor está "acima" só se o intervalo de 95% inteiro estiver acima da média. Valores com menos de 100 acidentes não são comparados.
+- **Ordenar pelo limite inferior do intervalo.** Ordenar pela proporção pura põe no topo os lugares com 2 acidentes e 2 graves. O limite inferior se lê como "pelo menos X% de graves, com 95% de confiança", e uma amostra pequena tem um limite inferior baixo.
+- **Repetir a comparação só com acidentes com vítima.** A % de graves depende do denominador: um lugar que registra menos acidentes sem vítima parece mais grave. Entre os acidentes com vítima, esse efeito some. Na maioria dos recortes o resultado fica igual, mas em um a conclusão muda: o álcool do condutor fica abaixo da média entre todos os acidentes e acima dela entre os com vítima.
+
+Numa entrevista, eu diria: "Antes de dizer que o Nordeste tem acidentes mais graves, eu testei se não era só o registro. O teste confirmou o Nordeste, mas mostrou que a minha conclusão sobre álcool estaria errada sem ele."
+
 ## Testes
 
-São 129 testes em `tests/`, rodando no container. Para conferir que eles reprovam quando devem, estraguei regras de propósito e voltei o código depois: `grave` sem feridos graves, `total_envolvidos` sem ignorados, a leitura sem `escape='"'`, a expressão da hora aceitando `25:99:00`, a regra de coerência aceitando "Com Vítimas Feridas" com morto e a gold do modelo com a coluna `mortos`. Em todos os casos os testes da regra falharam.
+São 151 testes em `tests/`, rodando no container. Para conferir que eles reprovam quando devem, estraguei regras de propósito e voltei o código depois: `grave` sem feridos graves, `total_envolvidos` sem ignorados, a leitura sem `escape='"'`, a expressão da hora aceitando `25:99:00`, a regra de coerência aceitando "Com Vítimas Feridas" com morto a gold do modelo com a coluna `mortos` e a análise ordenada pela proporção em vez do limite inferior do intervalo. Em todos os casos os testes da regra falharam.
 
 ## Revisão de código
 
-Depois da primeira versão da Fase 1, pedi uma revisão a outro agente. O que mudou por causa dela:
+Depois da primeira versão da Fase 1, o código passou por uma revisão. O que mudou por causa dela:
 
 - `id` nulo ou repetido não é mais deduplicado em silêncio: para o pipeline;
 - a bronze passou de `overwrite` para `append`, e a silver usa a ingestão mais recente de cada arquivo. Com `overwrite`, a deduplicação por ingestão mais recente não tinha efeito nenhum;

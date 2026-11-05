@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Sobe o código e os dados para o Databricks, roda bronze, silver e gold e
-# compara o resultado com a execução local (resultados/fase1_* e fase2_*).
+# Sobe o código e os dados para o Databricks, roda bronze, silver, gold e
+# análise e compara o resultado com a execução local (resultados/fase1_*,
+# fase2_* e fase3_*).
 #
 # Uso: databricks/implantar.sh <perfil-da-cli> <pasta-com-os-zips>
 # A pasta deve ter ocorrencia_<ano>/ocorrencia_<ano>.zip (como em src/validar_fonte.py).
@@ -19,7 +20,7 @@ V="dbfs:/Volumes/portfolio/acidentes_prf"
 
 # 1. notebooks (só eles: o código vai como wheel, ver docs/explicacao.md)
 "$DB" workspace mkdirs "$W" -p "$PERFIL"
-for n in 00_configurar 01_bronze 02_silver 03_gold; do
+for n in 00_configurar 01_bronze 02_silver 03_gold 04_analise; do
   "$DB" workspace import "$W/$n" --file "notebooks/$n.py" --format SOURCE --language PYTHON --overwrite -p "$PERFIL"
 done
 
@@ -37,13 +38,13 @@ for ano in $(seq 2017 2025); do
   "$DB" fs cp "$DADOS/ocorrencia_$ano/ocorrencia_$ano.zip" "$V/bruto/zips/datatran$ano.zip" --overwrite -p "$PERFIL"
 done
 
-# 4. bronze, silver e gold
+# 4. bronze, silver, gold e análise
 sed "s#/Workspace/Users/SEU_USUARIO/acidentes-prf/notebooks#$W#" databricks/job_pipeline.json > dist/job12.json
 "$DB" jobs submit --json @dist/job12.json -p "$PERFIL" --timeout 30m -o json > dist/execucao.json
 
-# 5. saída das tarefas silver e gold -> resultados/fase{1,2}_conferencia_databricks.csv
-for tarefa in silver gold; do
+# 5. saída das tarefas -> resultados/fase{1,2,3}_conferencia_databricks.csv
+for tarefa in silver gold analise; do
   RUN=$(python -c "import json;r=json.load(open('dist/execucao.json'));print([t['run_id'] for t in r['tasks'] if t['task_key']=='$tarefa'][0])")
   "$DB" jobs get-run-output "$RUN" -p "$PERFIL" -o json > "dist/saida_$tarefa.json"
 done
-python -I src/conferir_databricks.py dist/saida_silver.json dist/saida_gold.json resultados
+python -I src/conferir_databricks.py dist/saida_silver.json dist/saida_gold.json dist/saida_analise.json resultados

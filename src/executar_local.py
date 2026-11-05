@@ -16,7 +16,8 @@ Saídas em resultados/:
 - fase2_qualidade.csv: por ano e regra de src/qualidade.py, linhas reprovadas;
 - fase2_conferencia_gold.csv: ocorrências e graves por ano, silver x gold;
 - fase2_recortes_gold.csv: cada recorte do agregado soma o total da gold;
-- fase2_esquema_gold_modelo.csv: colunas, tipos e papel de cada coluna.
+- fase2_esquema_gold_modelo.csv: colunas, tipos e papel de cada coluna;
+- fase3_*.csv: análise (ver docs/analise.md).
 """
 from __future__ import annotations
 
@@ -30,6 +31,7 @@ from pyspark.sql import functions as F
 
 from src.bronze import agora_utc, extrair_zip, montar_bronze, zips_do_recorte
 from src.regras import COLUNAS_FONTE
+from src.analise import categorias_por_ano, comparar, resumo, transicao_por_mes
 from src.gold import ALVO, CONTEXTO, DINAMICA, agregar, montar_modelo, verificar_modelo
 from src.qualidade import bloqueios, contar_violacoes
 from src.silver import transformar, ultima_ingestao, validar_bronze
@@ -183,6 +185,7 @@ def main() -> None:
         raise SystemExit("conferência com a Fase 0 falhou: ver resultados/fase1_conferencia_*.csv")
 
     fase2(spark, silver, args.lake, args.resultados)
+    fase3(spark, silver, args.lake, args.resultados)
     spark.stop()
 
 
@@ -232,6 +235,40 @@ def fase2(spark: SparkSession, silver: DataFrame, lake: Path, resultados: Path) 
         print(c)
     if not all(c["bate"] for c in conf) or not all(r["bate_com_total"] for r in rec):
         raise SystemExit("gold não fecha com a silver: ver resultados/fase2_*.csv")
+
+
+
+def fase3(spark: SparkSession, silver: DataFrame, lake: Path, resultados: Path) -> None:
+    # Evidência da troca de lista de causas e de tipos em 2021.
+    linhas = []
+    for coluna in ("causa_acidente", "tipo_acidente"):
+        cont = {}
+        for r in categorias_por_ano(silver, coluna).collect():
+            cont.setdefault(r["valor"], {})[r["ano"]] = r["count"]
+        for valor in sorted(cont, key=str):
+            linhas.append({"coluna": coluna, "valor": valor,
+                           **{str(a): cont[valor].get(a, 0) for a in range(2019, 2026)}})
+    gravar_csv(resultados / "fase3_categorias_por_ano.csv", linhas)
+    trans = [r.asDict() for c in ("causa_acidente", "tipo_acidente")
+             for r in transicao_por_mes(silver, c, [2019, 2020], [2022, 2023, 2024, 2025],
+                                        [2020, 2021]).collect()]
+    gravar_csv(resultados / "fase3_transicao_por_mes.csv", trans)
+
+    agregado = spark.read.format("delta").load(str(lake / "gold_graves_por_recorte"))
+    comparado = comparar(agregado).cache()
+    gravar_csv(resultados / "fase3_resumo_recortes.csv", [r.asDict() for r in resumo(comparado).collect()])
+    colunas = ["valor", "ocorrencias", "graves", "pct_graves", "ic95_inf", "ic95_sup", "media_recorte",
+               "comparacao", "posicao", "com_vitima", "pct_graves_com_vitima", "ic95_inf_com_vitima",
+               "ic95_sup_com_vitima", "media_recorte_com_vitima", "comparacao_com_vitima",
+               "com_morto", "mortos"]
+    for (nome,) in comparado.select("recorte").distinct().collect():
+        rows = (comparado.where(F.col("recorte") == nome)
+                .orderBy(F.col("posicao").asc_nulls_last(), F.col("ocorrencias").desc(), "valor")
+                .select(*colunas).collect())
+        gravar_csv(resultados / f"fase3_recorte_{nome}.csv",
+                   [{k: (round(v, 6) if isinstance(v, float) else v) for k, v in r.asDict().items()}
+                    for r in rows])
+    print("fase 3: resultados gravados")
 
 
 if __name__ == "__main__":

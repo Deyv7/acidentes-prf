@@ -4,7 +4,7 @@ from pyspark.sql import functions as F
 
 from src import regras
 from src.bronze import montar_bronze
-from src.gold import (ALVO, CONTEXTO, DESFECHO, DINAMICA, NAO_INFORMADO, GoldInvalida,
+from src.gold import (ALVO, CONTEXTO, DESFECHO, DINAMICA, LISTA_ANTIGA, NAO_INFORMADO, GoldInvalida,
                       agregar, intervalo_wilson, montar_modelo, recortes, verificar_modelo)
 from src.silver import transformar
 from tests.conftest import INGESTAO, escrever_csv_prf, linha
@@ -112,6 +112,17 @@ def test_proporcao_e_intervalo(agregado):
     assert (sp["ocorrencias"], sp["graves"], sp["com_morto"], sp["mortos"]) == (3, 2, 1, 1)
     assert sp["pct_graves"] == pytest.approx(2 / 3)
     assert (sp["ic95_inf"], sp["ic95_sup"]) == pytest.approx(regras.wilson(2, 3))
+    # id 3 (1 ferido leve) tem vítima: 3 com vítima, 2 graves
+    assert sp["com_vitima"] == 3
+    assert sp["pct_graves_com_vitima"] == pytest.approx(2 / 3)
+    assert (sp["ic95_inf_com_vitima"], sp["ic95_sup_com_vitima"]) == pytest.approx(regras.wilson(2, 3))
+
+
+def test_sem_vitima_nao_conta_como_com_vitima(silver_de):
+    s = silver_de({2025: [linha(id="1", feridos="0", feridos_leves="0", ilesos="2",
+                                classificacao_acidente="Sem Vítimas")]})
+    r = {(x["recorte"], x["valor"]): x for x in agregar(s).collect()}[("uf", "SP")]
+    assert r["com_vitima"] == 0 and r["pct_graves_com_vitima"] is None
 
 
 def test_valor_ausente_vira_nao_informado(agregado):
@@ -123,3 +134,48 @@ def test_trecho_e_br_levam_a_uf(agregado):
     assert ("trecho_10km", "SP BR-116 km 220-230") in agregado
     assert ("trecho_10km", "RJ BR-116 km 220-230") in agregado
     assert ("municipio", "GUARULHOS/SP") in agregado
+
+
+# ---------- padronização de causa e tipo (troca de lista em 2021) ----------
+
+def test_causa_antes_de_2021_fica_nula_no_modelo(silver_de):
+    s = silver_de({2020: [linha(id="1", data_inversa="2020-01-01", causa_acidente="Falta de Atenção à Condução")],
+                   2021: [linha(id="2", data_inversa="2021-01-01", dia_semana="sexta-feira")]})
+    m = {r["id"]: r for r in montar_modelo(s).collect()}
+    assert m[1]["causa_padronizada"] is None
+    assert m[2]["causa_padronizada"] == "Reação tardia ou ineficiente do condutor"
+
+
+@pytest.mark.parametrize("original,padronizada", [
+    ("Transitar no Acostamento", "Transitar no acostamento"),
+    ("Pedestre - Ingestão de álcool/ substâncias psicoativas",
+     "Ingestão de álcool ou de substâncias psicoativas pelo pedestre"),
+    ("Ingestão de álcool e/ou substâncias psicoativas pelo pedestre",
+     "Ingestão de álcool ou de substâncias psicoativas pelo pedestre"),
+    ("Chuva", "Chuva"),  # fora do mapa: não muda
+])
+def test_causa_padronizada(silver_de, original, padronizada):
+    m = montar_modelo(silver_de({2025: [linha(causa_acidente=original)]})).collect()[0]
+    assert m["causa_padronizada"] == padronizada
+
+
+@pytest.mark.parametrize("original,padronizado", [
+    ("Colisão lateral", "Colisão lateral"),
+    ("Colisão lateral mesmo sentido", "Colisão lateral"),
+    ("Colisão lateral sentido oposto", "Colisão lateral"),
+    ("Colisão com objeto estático", "Colisão com objeto"),
+    ("Colisão com objeto em movimento", "Colisão com objeto"),
+    ("Colisão com objeto", "Colisão com objeto"),
+    ("Tombamento", "Tombamento"),
+])
+def test_tipo_padronizado(silver_de, original, padronizado):
+    m = montar_modelo(silver_de({2025: [linha(tipo_acidente=original)]})).collect()[0]
+    assert m["tipo_padronizado"] == padronizado
+
+
+def test_recorte_de_causa_separa_a_lista_antiga(silver_de):
+    s = silver_de({2020: [linha(id="1", data_inversa="2020-01-01", causa_acidente="Falta de Atenção à Condução")],
+                   2025: [linha(id="2")]})
+    a = {(r["recorte"], r["valor"]): r["ocorrencias"] for r in agregar(s).collect()}
+    assert a[("causa_acidente", LISTA_ANTIGA)] == 1
+    assert a[("causa_acidente", "Reação tardia ou ineficiente do condutor")] == 1

@@ -1,14 +1,14 @@
 recorte,valores,ocorrencias,graves,bate_com_total
 ano,7,473813,132637,True
 br,130,473813,132637,True
-causa_acidente,91,473813,132637,True
+causa_acidente,74,473813,132637,True
 condicao_meteorologica,10,473813,132637,True
 dia_semana,7,473813,132637,True
 fase_dia,4,473813,132637,True
 hora,24,473813,132637,True
 mes,12,473813,132637,True
 municipio,2129,473813,132637,True
-tipo_acidente,22,473813,132637,True
+tipo_acidente,18,473813,132637,True
 tipo_pista,3,473813,132637,True
 trecho_10km,6682,473813,132637,True
 uf,27,473813,132637,True

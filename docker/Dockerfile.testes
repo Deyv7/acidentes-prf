@@ -1,4 +1,4 @@
-# Ambiente dos testes: Linux, Python 3.12 e Java 17, igual ao que roda no CI.
+# Ambiente dos testes: Linux, Python 3.12 e Java 17.
 # No Windows, o Spark local precisaria de winutils.exe (binário de terceiros).
 FROM python:3.12.10-slim-bookworm
 
