@@ -189,16 +189,39 @@ export function mapa(m, { titulo, nMin }) {
 }
 
 // ---------- 100 pontos ----------
-export function cem(qtd, titulo) {
-  const lado = 10, passo = 30, r = 10;
+export function cem(qtd, titulo, { graves, total } = {}) {
+  // Uma faixa de 100 acidentes: os graves à esquerda, o resto à direita,
+  // com uma divisória fina a cada acidente.
+  const w = estreito() ? larguraTela() : 460, h = 200;
+  const y0 = 104, alt = 56, gap = 2;
+  const x = (v) => (v / 100) * w;
+  const xg = x(qtd);
   let s = "";
-  for (let i = 0; i < 100; i++) {
-    const cx = (i % lado) * passo + passo / 2, cy = Math.floor(i / lado) * passo + passo / 2;
-    s += i < qtd
-      ? `<circle class="anim grave-ponto" style="--i:${i}" cx="${cx}" cy="${cy}" r="${r}"/>`
-      : `<circle class="leve-ponto" cx="${cx}" cy="${cy}" r="${r}"/>`;
+  s += `<g class="anim sobe" style="--i:0">
+    <text class="cem-num" x="0" y="44">${qtd}</text>
+    <text class="cem-rotulo" x="0" y="68">graves</text>
+    ${graves != null ? `<text class="eixo-texto" x="0" y="88">${int(graves)} acidentes</text>` : ""}
+  </g>
+  <g class="anim sobe" style="--i:6">
+    <text class="cem-num leve" x="${w}" y="44" text-anchor="end">${100 - qtd}</text>
+    <text class="cem-rotulo" x="${w}" y="68" text-anchor="end">sem morto nem ferido grave</text>
+    ${graves != null ? `<text class="eixo-texto" x="${w}" y="88" text-anchor="end">${int(total - graves)} acidentes</text>` : ""}
+  </g>`;
+  s += `<rect class="cem-resto" x="${f(xg + gap / 2)}" y="${y0}" width="${f(w - xg - gap / 2)}" height="${alt}" rx="6"/>`;
+  s += `<rect class="cem-graves anim estica" x="0" y="${y0}" width="${f(xg - gap / 2)}" height="${alt}" rx="6"/>`;
+  let dg = "", dr = "";
+  for (let i = 1; i < 100; i++) {
+    if (i === qtd) continue;
+    const seg = `M${f(x(i))} ${y0 + 6}V${y0 + alt - 6}`;
+    if (i < qtd) dg += seg; else dr += seg;
   }
-  return svg(lado * passo, lado * passo, titulo, s);
+  s += `<path class="cem-div anim" d="${dg}"/><path class="cem-div resto" d="${dr}"/>`;
+  for (let v = 0; v <= 100; v += 10) {
+    const xv = Math.min(w - 0.5, Math.max(0.5, x(v)));
+    s += `<line class="linha-eixo" x1="${f(xv)}" x2="${f(xv)}" y1="${y0 + alt + 6}" y2="${y0 + alt + (v % 50 ? 10 : 14)}"/>`;
+  }
+  for (const v of [0, 50, 100]) s += `<text class="eixo-texto" x="${f(x(v))}" y="${y0 + alt + 32}" text-anchor="${v === 0 ? "start" : v === 100 ? "end" : "middle"}">${v === 100 ? "100 acidentes" : v}</text>`;
+  return svg(w, h, titulo, s);
 }
 
 // ---------- colunas por mês (troca da lista de causas) ----------

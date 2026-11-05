@@ -44,11 +44,10 @@ export function paradas(d) {
         <p>Essa média, <strong>${pct(M)}</strong>, é a linha de referência da viagem. Cada parada mostra o que puxa a proporção de graves para cima ou para baixo.</p>
       </div>
       <div class="parada-grafico estreito">
-        <div class="grafico quadrado" data-g="cem"></div>
-        <div class="legenda"><span><i class="chave grave"></i>grave</span><span><i class="chave leve"></i>sem morto nem ferido grave</span></div>
+        <div class="grafico" data-g="cem"></div>
       </div>`,
     montar(el) {
-      el.querySelector('[data-g="cem"]').innerHTML = cem(em100, `${em100} de cada 100 acidentes foram graves`);
+      el.querySelector('[data-g="cem"]').innerHTML = cem(em100, `${em100} de cada 100 acidentes foram graves`, { graves: S.graves, total: S.ocorrencias });
     },
   });
 

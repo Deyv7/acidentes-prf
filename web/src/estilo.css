@@ -532,10 +532,6 @@ html.carrossel .carrossel-barra {
   transition: width .3s var(--ease), background .3s;
 }
 .carrossel-pontos button[aria-current] { width: 20px; background: var(--ambar); }
-.carrossel-dica { font-size: 11.5px; color: var(--mudo); display: inline-flex; align-items: center; gap: 6px; transition: opacity .4s; }
-.carrossel-dica i { display: inline-block; width: 14px; height: 2px; background: currentColor; border-radius: 2px; animation: dica-arrasta 1.4s var(--ease) infinite; }
-@keyframes dica-arrasta { 0%, 100% { transform: translateX(4px); } 50% { transform: translateX(-6px); } }
-.carrossel-barra.usado .carrossel-dica { display: none; }
 
 /* até chegar à última parada, a página termina no carrossel */
 html.travado .explorador, html.travado .fim, html.travado .sobre, html.travado .topo-link { display: none; }
@@ -545,3 +541,27 @@ html.travado .explorador, html.travado .fim, html.travado .sobre, html.travado .
   font-size: 13px; color: var(--texto-2); text-align: center;
 }
 .carrossel-trava svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--ambar); stroke-width: 1.6; stroke-linecap: round; }
+
+/* parada 01: faixa de 100 acidentes */
+.cem-num { font-size: 46px; font-weight: 700; letter-spacing: -0.04em; fill: var(--texto); font-variant-numeric: tabular-nums; }
+.cem-num.leve { fill: var(--texto-2); }
+.cem-rotulo { font-size: 13px; font-weight: 600; fill: var(--texto-2); }
+.cem-graves { fill: var(--texto); }
+.cem-resto { fill: #24252a; stroke: #3b3b38; stroke-width: 1; }
+.cem-div { stroke: rgba(8, 9, 11, 0.3); stroke-width: 1; }
+.cem-div.resto { stroke: rgba(255, 255, 255, 0.06); }
+.parada .anim.estica { transform: scaleX(0); transform-box: fill-box; transform-origin: 0 50%; transition: opacity .3s, transform 1.1s var(--ease) .15s; }
+.parada.ativo .anim.estica { transform: none; }
+
+/* celular: seta que aparece ao chegar no carrossel e some em fade */
+.carrossel-seta {
+  position: absolute; right: 26px; z-index: 6; pointer-events: none;
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px 12px 18px; border-radius: 999px;
+  background: rgba(8, 9, 11, 0.82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--borda-forte); box-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.7);
+  font-size: 14px; font-weight: 600; color: var(--texto);
+  opacity: 0; transform: translateX(12px); transition: opacity .6s var(--ease), transform .6s var(--ease);
+}
+.carrossel-seta.visivel { opacity: 1; transform: none; }
+.carrossel-seta svg { width: 22px; height: 22px; fill: none; stroke: var(--ambar); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; animation: seta-empurra 1s var(--ease) infinite; }
+@keyframes seta-empurra { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(5px); } }
