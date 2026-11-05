@@ -142,7 +142,6 @@ export function dispersao(ls, { media, titulo, nomes = [] }) {
   }
   s += `<text class="eixo-texto" x="${w - dir}" y="${h - 2}" text-anchor="end">acidentes na rodovia (escala log) →</text>`;
   s += `<line class="linha-media" x1="${esq}" x2="${w - dir}" y1="${f(y(media))}" y2="${f(y(media))}"/>`;
-  s += `<text class="rotulo" x="${esq + 6}" y="${f(y(media) - 7)}">média ${pct(media)}</text>`;
   const usados = [];
   ls.forEach((l, k) => {
     const cx = x(Math.log10(l.n)), cy = y(l.pct);
@@ -158,6 +157,13 @@ export function dispersao(ls, { media, titulo, nomes = [] }) {
     }
     s += `</g>`;
   });
+  // Rótulo da média por cima dos pontos, numa etiqueta com fundo, no lado
+  // da linha com menos pontos por perto.
+  const texto = `média ${pct(media)}`, lw = texto.length * 7 + 16, lh = 22, ym = y(media);
+  const ocupacao = (x0) => ls.filter((l) => { const cx = x(Math.log10(l.n)), cy = y(l.pct); return cx > x0 - 6 && cx < x0 + lw + 6 && Math.abs(cy - ym) < lh; }).length;
+  const xl = ocupacao(esq + 4) <= ocupacao(w - dir - lw - 4) ? esq + 4 : w - dir - lw - 4;
+  s += `<g class="media-etiqueta" pointer-events="none"><rect x="${f(xl)}" y="${f(ym - lh / 2)}" width="${lw}" height="${lh}" rx="${lh / 2}"/>`;
+  s += `<text x="${f(xl + lw / 2)}" y="${f(ym + 4.5)}" text-anchor="middle">${texto}</text></g>`;
   return svg(w, h, titulo, s);
 }
 
