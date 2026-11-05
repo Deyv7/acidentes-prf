@@ -505,13 +505,12 @@ table.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
 html.carrossel .cena { overflow: clip; padding-top: 0; }
 html.carrossel .trilho {
   display: flex; gap: 12px; max-width: none; margin: 0; padding: 0 16px;
-  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scroll-padding: 0 16px;
-  overscroll-behavior-x: contain; scrollbar-width: none; align-items: flex-start;
+  overflow: hidden; touch-action: pan-y; scrollbar-width: none; align-items: flex-start;
   transition: height .35s var(--ease);
 }
 html.carrossel .trilho::-webkit-scrollbar { display: none; }
 html.carrossel .trilho::before { display: none; }
-html.carrossel .parada { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; scroll-snap-stop: always; }
+html.carrossel .parada { flex: 0 0 100%; min-width: 0; }
 html.carrossel .carrossel-barra {
   display: flex; align-items: center; gap: 10px; position: sticky; top: var(--topo); z-index: 5;
   padding: 12px 16px; margin-bottom: 14px;
