@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>O caminho até um acidente grave</title>
+  <meta name="description" content="Onde e quando os acidentes nas rodovias federais são mais graves, com dados abertos da PRF.">
+  <meta name="theme-color" content="#08090b">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="progresso" aria-hidden="true"><div class="progresso-barra" id="barra"></div></div>
+
+  <header class="topo">
+    <a class="marca" href="#inicio"><span class="marca-sinal" aria-hidden="true"></span>Acidentes graves nas BRs</a>
+    <nav class="estacoes" id="estacoes" aria-label="Paradas da viagem"></nav>
+    <a class="topo-link" href="#explorar">Explorar</a>
+  </header>
+
+  <main>
+    <section class="abertura" id="inicio">
+      <div class="abertura-ceu" aria-hidden="true"></div>
+      <div class="abertura-estrada" aria-hidden="true">
+        <div class="pista-3d"><div class="pista-faixa"></div></div>
+      </div>
+      <div class="abertura-conteudo">
+        <p class="kicker revela" id="ab-kicker">Rodovias federais</p>
+        <h1 class="revela">O caminho até<br>um acidente grave</h1>
+        <p class="lead revela" id="ab-lead">Carregando os dados…</p>
+      </div>
+      <p class="rolar" aria-hidden="true"><span class="rolar-linha"></span>Role para seguir viagem</p>
+    </section>
+
+    <section class="jornada" id="jornada" aria-label="A viagem">
+      <div class="cena" id="cena">
+        <div class="ceu-dia" aria-hidden="true"></div>
+        <div class="ceu-noite" aria-hidden="true"><div class="estrelas"></div></div>
+        <div class="neblina" aria-hidden="true"></div>
+        <canvas class="chuva" aria-hidden="true"></canvas>
+        <div class="trilho" id="trilho"></div>
+        <div class="estrada" aria-hidden="true">
+          <div class="acostamento"></div>
+          <div class="faixa"></div>
+          <div class="marcos"></div>
+          <div class="carro">
+            <div class="farol-feixe"></div>
+            <svg viewBox="0 0 120 44" class="carro-svg"><path d="M8 30c0-4 2-7 6-8l14-3 14-10c3-2 6-3 10-3h26c4 0 7 1 10 4l10 9 10 2c4 1 6 4 6 8v4c0 2-1 3-3 3H11c-2 0-3-1-3-3z"/><path class="vidro" d="M45 18l10-8c2-1 4-2 7-2h10v10zM76 8h7c3 0 5 1 7 3l7 7H76z"/><circle cx="31" cy="37" r="7"/><circle cx="95" cy="37" r="7"/><circle class="aro" cx="31" cy="37" r="3"/><circle class="aro" cx="95" cy="37" r="3"/><rect class="lanterna" x="114" y="24" width="4" height="5" rx="1"/></svg>
+          </div>
+          <div class="carro-contra">
+            <div class="farol-contra"></div>
+            <svg viewBox="0 0 120 44" class="carro-svg"><path d="M8 30c0-4 2-7 6-8l14-3 14-10c3-2 6-3 10-3h26c4 0 7 1 10 4l10 9 10 2c4 1 6 4 6 8v4c0 2-1 3-3 3H11c-2 0-3-1-3-3z"/><path class="vidro" d="M45 18l10-8c2-1 4-2 7-2h10v10zM76 8h7c3 0 5 1 7 3l7 7H76z"/><circle cx="31" cy="37" r="7"/><circle cx="95" cy="37" r="7"/><circle class="aro" cx="31" cy="37" r="3"/><circle class="aro" cx="95" cy="37" r="3"/><rect class="lanterna" x="114" y="24" width="4" height="5" rx="1"/></svg>
+          </div>
+        </div>
+        <div class="clarao" aria-hidden="true"></div>
+        <div class="estilhacos" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="explorador" id="explorar" aria-labelledby="ex-titulo">
+      <div class="explorador-cabeca">
+        <p class="kicker">Explorador</p>
+        <h2 id="ex-titulo">Todos os recortes</h2>
+        <p class="lead-pequeno" id="ex-lead"></p>
+      </div>
+      <div class="cartao" id="explorador"></div>
+    </section>
+
+    <section class="fim" id="fim" aria-labelledby="fim-titulo">
+      <div class="fim-estrada" aria-hidden="true"><div class="pista-3d"><div class="pista-faixa"></div></div></div>
+      <div class="fim-cartao">
+        <p class="kicker">Fim</p>
+        <h2 id="fim-titulo">Obrigado por ler até aqui</h2>
+        <p class="fim-lide">Esta análise faz parte do meu portfólio. Lá estão os outros projetos e os meus contatos.</p>
+        <p class="acoes">
+          <a class="voltar" href="https://deyv7.github.io/">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10H4m5-5l-5 5 5 5" /></svg>
+            Voltar ao portfólio
+          </a>
+          <a class="contato" href="https://deyv7.github.io/contato/">Falar comigo</a>
+        </p>
+      </div>
+    </section>
+
+    <footer class="sobre" id="sobre">
+      <div class="sobre-grade" id="sobre-conteudo"></div>
+      <p class="assinatura"><b>O caminho até um acidente grave</b>, por Deyvid Prado.</p>
+    </footer>
+  </main>
+
+  <div class="dica" id="dica" role="tooltip" hidden></div>
+  <noscript><p class="sem-js">A página precisa de JavaScript para mostrar os gráficos. A análise em texto está em docs/analise.md no repositório.</p></noscript>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

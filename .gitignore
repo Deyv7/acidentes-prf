@@ -20,6 +20,9 @@ derby.log
 .DS_Store
 Thumbs.db
 
+# Página
+node_modules/
+
 # Wheel
 build/
 dist/

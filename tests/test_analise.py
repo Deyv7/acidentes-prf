@@ -93,3 +93,18 @@ def test_comparacao_entre_com_vitima(spark):
     assert c["A"]["media_recorte_com_vitima"] == pytest.approx(0.5)
     assert c["A"]["comparacao_com_vitima"] == "indistinguível"
     assert resumo(comparar(a)).collect()[0]["mesmo_lado_com_vitima"] == 0
+
+
+def test_grade_mapa(spark):
+    from src.analise import grade_mapa
+    m = spark.createDataFrame(
+        [(-23.4, -46.6, True, True), (-23.1, -46.9, True, False),   # mesma célula de 0,5°
+         (-22.9, -46.6, True, False),                                # célula de cima
+         (None, None, False, True)],                                 # sem coordenada: fora
+        "latitude double, longitude double, coord_valida boolean, grave boolean")
+    g = {(r["lat_celula"], r["lon_celula"]): r for r in grade_mapa(m, n_min=2).collect()}
+    assert set(g) == {(-23.5, -47.0), (-23.0, -47.0)}
+    c = g[(-23.5, -47.0)]
+    assert (c["ocorrencias"], c["graves"]) == (2, 1)
+    assert c["media"] == pytest.approx(1 / 3)
+    assert g[(-23.0, -47.0)]["comparacao"] == "amostra pequena"

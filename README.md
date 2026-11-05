@@ -26,6 +26,12 @@ De 2019 a 2025 foram 473.813 acidentes, e 28,0% deles foram graves. A análise c
 
 Repeti todas as comparações só entre os acidentes com vítima, o que tira o efeito de lugares que registram mais ou menos acidentes leves. Os padrões de região e de horário se mantêm. O álcool do condutor muda de lado: fica abaixo da média entre todos os acidentes e acima dela entre os com vítima.
 
+## Página
+
+A página está publicada em <https://deyv7.github.io/acidentes-prf/>. O código fica em `web/` e conta a análise como uma viagem: cada parada é um fator (lugar, via, hora, tempo, causa, tipo de acidente) e mostra a proporção de graves com o intervalo de 95%. No fim há um explorador com os 13 recortes, as duas contas (todos os acidentes e só com vítima), busca e ordenação.
+
+A página não tem número escrito à mão. `src/exportar_web.py` lê `resultados/` e grava os JSON em `web/public/dados/`, conferindo que cada recorte soma o total da gold; os textos são montados a partir desses JSON. Em tela grande os cards correm na horizontal com a rolagem (GSAP ScrollTrigger); em tela pequena, ou com movimento reduzido no sistema, ficam empilhados.
+
 ## Pipeline
 
 ```mermaid
@@ -80,6 +86,13 @@ databricks/implantar.sh <perfil> <pasta dos zips>
 
 O script importa os notebooks, cria o schema e os volumes, sobe o wheel e os ZIPs, roda o job e compara a saída com `resultados/`. As versões estão fixas em `requirements.txt`: pyspark 4.0.1 e delta-spark 4.0.1, as mesmas do ambiente serverless versão 4.
 
+Página, a partir de `resultados/` (Python só com a biblioteca padrão e Node 20 ou mais novo):
+
+```bash
+python -I src/exportar_web.py
+cd web && npm ci && npm run dev      # ou npm run build, que gera web/dist/
+```
+
 ## Estrutura
 
 ```
@@ -89,6 +102,8 @@ notebooks/    00_configurar a 04_analise, só chamam src/
 databricks/   job e script de implantação
 resultados/   saída de toda consulta citada nos documentos
 docs/         validação da fonte, explicação das decisões e análise
+web/          página da análise (Vite, GSAP, Lenis); dados em web/public/dados/
+dados_externos/  malha das UFs do IBGE, usada só no contorno do mapa
 ```
 
 ## Limitações
@@ -98,3 +113,5 @@ Sem volume de tráfego, a proporção de graves mede a gravidade dos acidentes q
 ## Fonte
 
 Polícia Rodoviária Federal, dados abertos de sinistros de trânsito agrupados por ocorrência (2017 a 2025), baixados em 4 de novembro de 2026: <https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf>. A licença e a referência completa estão em [`docs/validacao-fonte.md`](docs/validacao-fonte.md). O projeto é independente e não tem vínculo com a PRF.
+
+O contorno das UFs no mapa da página vem da malha do IBGE em qualidade mínima (API `servicodados.ibge.gov.br/api/v3/malhas`, baixada em 4 de novembro de 2026 para `dados_externos/malha_uf_ibge.geojson`). Ela só desenha as divisas; nenhum número sai dela.

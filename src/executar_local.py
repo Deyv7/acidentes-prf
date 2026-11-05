@@ -31,7 +31,7 @@ from pyspark.sql import functions as F
 
 from src.bronze import agora_utc, extrair_zip, montar_bronze, zips_do_recorte
 from src.regras import COLUNAS_FONTE
-from src.analise import categorias_por_ano, comparar, resumo, transicao_por_mes
+from src.analise import categorias_por_ano, comparar, grade_mapa, resumo, transicao_por_mes
 from src.gold import ALVO, CONTEXTO, DINAMICA, agregar, montar_modelo, verificar_modelo
 from src.qualidade import bloqueios, contar_violacoes
 from src.silver import transformar, ultima_ingestao, validar_bronze
@@ -268,6 +268,10 @@ def fase3(spark: SparkSession, silver: DataFrame, lake: Path, resultados: Path) 
         gravar_csv(resultados / f"fase3_recorte_{nome}.csv",
                    [{k: (round(v, 6) if isinstance(v, float) else v) for k, v in r.asDict().items()}
                     for r in rows])
+    modelo = spark.read.format("delta").load(str(lake / "gold_ocorrencias_modelo"))
+    gravar_csv(resultados / "fase3_grade_mapa.csv",
+               [{k: (round(v, 6) if isinstance(v, float) else v) for k, v in r.asDict().items()}
+                for r in grade_mapa(modelo).collect()])
     print("fase 3: resultados gravados")
 
 
