@@ -1,0 +1,5 @@
+# Spark e Delta para rodar a lógica e os testes fora do Databricks.
+# delta-spark 4.0.x é compilado para o Spark 4.0.
+pyspark==4.0.1
+delta-spark==4.0.1
+pytest==9.2.0

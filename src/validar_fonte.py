@@ -17,25 +17,18 @@ import hashlib
 import io
 import json
 import re
+import sys
 import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
+# Com -I o Python não põe a pasta do projeto no sys.path; o projeto é confiável,
+# os dados não (por isso -I).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.regras import (CONTAGENS, LAT_MAX, LAT_MIN, LON_MAX, LON_MIN,  # noqa: E402
+                        NORONHA, dentro_do_brasil)
+
 NULOS = {"", "NA"}
-
-# Extremos do território continental com folga de ~0,01 grau, mais uma caixa
-# só para Fernando de Noronha (PE), que tem a BR-363: a validação de 2024 achou
-# um acidente real lá (id 620583, longitude -32,41). Alargar a caixa continental
-# até -32,35 deixaria passar coordenadas erradas no mar (vistas em 2017).
-LAT_MIN, LAT_MAX = -33.76, 5.28
-LON_MIN, LON_MAX = -74.00, -34.78
-NORONHA = (-3.95, -3.80, -32.55, -32.35)  # lat_min, lat_max, lon_min, lon_max
-
-
-def dentro_do_brasil(a: float, o: float) -> bool:
-    if LAT_MIN <= a <= LAT_MAX and LON_MIN <= o <= LON_MAX:
-        return True
-    return NORONHA[0] <= a <= NORONHA[1] and NORONHA[2] <= o <= NORONHA[3]
 
 CATEGORICAS = [
     "dia_semana", "uf", "br", "causa_acidente", "tipo_acidente",
@@ -43,8 +36,6 @@ CATEGORICAS = [
     "condicao_metereologica", "tipo_pista", "tracado_via", "uso_solo",
     "regional",
 ]
-CONTAGENS = ["pessoas", "mortos", "feridos_leves", "feridos_graves",
-             "ilesos", "ignorados", "feridos", "veiculos"]
 
 RE_INT = re.compile(r"^-?\d+$")
 RE_DEC = re.compile(r"^-?\d+(,\d+)?$")
@@ -163,6 +154,8 @@ def checar_qualidade(linhas: list[dict], ano: int) -> tuple[list[dict], dict]:
     cont_id = Counter(ids)
     id_nulo = sum(1 for i in ids if i in NULOS)
     id_dup_linhas = sum(c for i, c in cont_id.items() if c > 1 and i not in NULOS)
+    # Achado na primeira execução da silver: ids redondos em notação científica.
+    id_nao_inteiro = [i for i in ids if i not in NULOS and not RE_INT.match(i)]
 
     lat = [num(r["latitude"]) for r in linhas]
     lon = [num(r["longitude"]) for r in linhas]
@@ -206,6 +199,7 @@ def checar_qualidade(linhas: list[dict], ano: int) -> tuple[list[dict], dict]:
     testes = [
         ("id_nulo", id_nulo),
         ("id_duplicado_linhas", id_dup_linhas),
+        ("id_nao_inteiro", len(id_nao_inteiro)),
         ("coordenada_nula_ou_invalida", coord_nula),
         ("coordenada_fora_do_brasil", len(fora_br)),
         ("data_invalida", data_invalida),
@@ -228,6 +222,7 @@ def checar_qualidade(linhas: list[dict], ano: int) -> tuple[list[dict], dict]:
     tab = [{"teste": t, "linhas_reprovadas": v,
             "pct_das_linhas": round(100 * v / n, 3)} for t, v in testes]
     extra = {
+        "id_nao_inteiro_valores": id_nao_inteiro,
         "coordenada_fora_do_brasil_detalhe": {
             "lat_lon_zero": zero_zero,
             "possivelmente_trocadas": trocadas,

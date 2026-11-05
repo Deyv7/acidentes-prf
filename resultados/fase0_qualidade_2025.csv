@@ -1,6 +1,7 @@
 teste,linhas_reprovadas,pct_das_linhas
 id_nulo,0,0.0
 id_duplicado_linhas,0,0.0
+id_nao_inteiro,0,0.0
 coordenada_nula_ou_invalida,0,0.0
 coordenada_fora_do_brasil,0,0.0
 data_invalida,0,0.0

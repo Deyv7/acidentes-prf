@@ -19,3 +19,11 @@ derby.log
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Wheel
+build/
+dist/
+*.egg-info/
+
+# Estado local da CLI do Databricks (databricks sync)
+.databricks/

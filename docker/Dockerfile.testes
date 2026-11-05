@@ -1,0 +1,18 @@
+# Ambiente dos testes: Linux, Python 3.12 e Java 17, igual ao que roda no CI.
+# No Windows, o Spark local precisaria de winutils.exe (binário de terceiros).
+FROM python:3.12.10-slim-bookworm
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openjdk-17-jre-headless \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Baixa os jars do Delta uma vez, na construção da imagem, para os testes
+# não dependerem de internet.
+COPY docker/aquecer_delta.py /tmp/aquecer_delta.py
+RUN python /tmp/aquecer_delta.py
+
+CMD ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider"]

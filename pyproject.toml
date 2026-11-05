@@ -1,0 +1,18 @@
+# O pacote src/ vira um wheel para rodar no Databricks: os notebooks instalam o
+# wheel a partir de um volume em vez de importar arquivos do workspace.
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acidentes-prf"
+version = "0.1.0"
+description = "Bronze e silver dos acidentes nas rodovias federais (PRF)"
+requires-python = ">=3.12"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

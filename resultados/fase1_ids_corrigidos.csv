@@ -1,0 +1,6 @@
+id,arquivo,data,mesmo_id_por_extenso,data_id_menos_1,data_id_mais_1
+100000,datatran2018.csv,2018-01-01,False,2018-01-01,2018-01-01
+200000,datatran2019.csv,2019-03-29,False,2019-03-29,2019-03-29
+300000,datatran2020.csv,2020-08-07,False,2020-08-07,2020-08-07
+400000,datatran2021.csv,2021-12-05,False,2021-12-05,
+600000,datatran2024.csv,2024-05-12,False,2024-05-12,2024-05-12

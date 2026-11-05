@@ -1,0 +1,10 @@
+{
+  "run_name": "acidentes-prf bronze e silver",
+  "environments": [{"environment_key": "spark4", "spec": {"environment_version": "4"}}],
+  "tasks": [
+    {"task_key": "bronze", "environment_key": "spark4",
+     "notebook_task": {"notebook_path": "/Workspace/Users/SEU_USUARIO/acidentes-prf/notebooks/01_bronze"}},
+    {"task_key": "silver", "environment_key": "spark4", "depends_on": [{"task_key": "bronze"}],
+     "notebook_task": {"notebook_path": "/Workspace/Users/SEU_USUARIO/acidentes-prf/notebooks/02_silver"}}
+  ]
+}

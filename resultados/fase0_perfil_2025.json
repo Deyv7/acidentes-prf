@@ -46,6 +46,7 @@
     "delegacia",
     "uop"
   ],
+  "id_nao_inteiro_valores": [],
   "coordenada_fora_do_brasil_detalhe": {
     "lat_lon_zero": 0,
     "possivelmente_trocadas": 0,

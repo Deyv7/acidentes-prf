@@ -141,9 +141,18 @@ Os que reprovam linhas:
 | Teste | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 | O que fazer |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Coordenada fora do Brasil | 57 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | na silver, lat/lon viram nulas e uma coluna `coord_valida = false` marca a linha. A ocorrência fica, porque UF, BR e km continuam bons |
+| `id` que não é número inteiro | 0 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 1 | ver "O id em notação científica" abaixo |
 | Morto com classificação diferente de fatal | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | as duas linhas têm classificação `NA`. Na silver, a classificação é derivada das contagens quando vier nula, e o teste aceita só esses casos (exceção com `id`) |
 | Classificação nula | 1 | 1 | 1 | 2 | 1 | 1 | 1 | 1 | 1 | 1 | igual ao item anterior |
 | `pessoas < mortos + feridos + ilesos + ignorados` | 4.572 | 3.519 | 3.098 | 3.340 | 3.517 | 3.547 | 3.767 | 3.887 | 3.823 | 2.898 | ver abaixo |
+
+### O id em notação científica
+
+A primeira versão desta validação não pegou este problema. Ele apareceu na primeira execução da silver, quando a checagem de conversão de tipos parou o pipeline com 5 linhas.
+
+Em seis arquivos, o único id redondo do ano está escrito em notação científica: `1e+05` em 2018, `2e+05` em 2019, `3e+05` em 2020, `4e+05` em 2021, `6e+05` em 2024 e `8e+05` em 2026 (`id_nao_inteiro_valores` em `fase0_perfil_<ano>.json`). É o que acontece quando um CSV é gravado pelo R com a configuração padrão, que escreve 100000 como `1e+05`. A Fase 0 não viu o problema porque conferia o id como texto: `"1e+05"` não é nulo nem repetido.
+
+Para confirmar que `1e+05` é mesmo o id 100000, verifiquei duas coisas na bronze de 2017 a 2025 (`fase1_ids_corrigidos.csv`). Primeiro, nenhum desses ids aparece também escrito por extenso. Segundo, os vizinhos são do mesmo dia: o id anterior (99999, 199999 etc.) existe em todos os casos, e o seguinte existe em todos menos no 400000, que não tem 400001. A silver converte esse formato para inteiro só quando o resultado é exato e marca a linha com `id_corrigido = true`. Um id que não seja inteiro, como `1.5e+00`, continua parando o pipeline. A contagem por ano está em `fase1_conferencia_silver.csv`.
 
 ### A coluna `pessoas`
 
@@ -153,7 +162,7 @@ Conclusão: a soma das contagens fecha com o arquivo por pessoa, e a coluna `pes
 
 ## A fonte serve?
 
-Serve. O `id` é único e sem nulos, as contagens são completas e coerentes com a classificação e com o arquivo por pessoa, as coordenadas de 2018 em diante estão todas dentro do Brasil e o layout é o mesmo em todos os anos de 2017 a 2026. As limitações que ficam:
+Serve. O `id` é único e sem nulos (depois de corrigir 1 id por ano em notação científica, em alguns anos), as contagens são completas e coerentes com a classificação e com o arquivo por pessoa, as coordenadas de 2018 em diante estão todas dentro do Brasil e o layout é o mesmo em todos os anos de 2017 a 2026. As limitações que ficam:
 
 1. Não há volume de tráfego. Contagem de acidentes não é risco. A única taxa honesta é a proporção de graves entre os acidentes de um mesmo recorte.
 2. Em abril de 2018 a série de "Sem Vítimas" quebra, o que afeta as contagens totais e a proporção de graves. A análise usa 2019 a 2025.
