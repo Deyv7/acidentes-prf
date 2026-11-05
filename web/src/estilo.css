@@ -555,16 +555,24 @@ html.travado .explorador, html.travado .fim, html.travado .sobre, html.travado .
 
 /* celular: seta que aparece ao chegar no carrossel e some em fade */
 .carrossel-seta {
-  position: absolute; right: 26px; z-index: 6; pointer-events: none;
-  display: flex; align-items: center; gap: 10px; padding: 12px 14px 12px 18px; border-radius: 999px;
-  background: rgba(8, 9, 11, 0.82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  border: 1px solid var(--borda-forte); box-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.7);
-  font-size: 14px; font-weight: 600; color: var(--texto);
-  opacity: 0; transform: translateX(12px); transition: opacity .6s var(--ease), transform .6s var(--ease);
+  position: fixed; inset: 0; z-index: 40; pointer-events: none;
+  display: grid; place-items: center;
+  background: rgba(8, 9, 11, 0.45); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  opacity: 0; visibility: hidden; transition: opacity .6s var(--ease), visibility 0s .6s;
 }
-.carrossel-seta.visivel { opacity: 1; transform: none; }
-.carrossel-seta svg { width: 22px; height: 22px; fill: none; stroke: var(--ambar); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; animation: seta-empurra 1s var(--ease) infinite; }
-@keyframes seta-empurra { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(5px); } }
+.carrossel-seta.visivel { opacity: 1; visibility: visible; transition: opacity .5s var(--ease), visibility 0s; }
+.carrossel-seta-miolo {
+  display: grid; justify-items: center; gap: 18px;
+  font-size: 18px; font-weight: 600; letter-spacing: -0.01em; color: var(--texto);
+  transform: translateY(10px) scale(0.96); transition: transform .6s var(--ease);
+}
+.carrossel-seta.visivel .carrossel-seta-miolo { transform: none; }
+.carrossel-seta-icone {
+  width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--ambar); box-shadow: 0 0 0 10px rgba(242, 179, 61, 0.14), 0 24px 50px -16px rgba(242, 179, 61, 0.6);
+}
+.carrossel-seta-icone svg { width: 46px; height: 46px; fill: none; stroke: var(--fundo); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; animation: seta-empurra 1s var(--ease) infinite; }
+@keyframes seta-empurra { 0%, 100% { transform: translateX(-6px); } 50% { transform: translateX(8px); } }
 
 /* etiqueta da média sobre a dispersão */
 .media-etiqueta rect { fill: var(--fundo); stroke: var(--texto-2); stroke-width: 1; stroke-dasharray: 3 3; }

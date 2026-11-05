@@ -242,13 +242,12 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
     const dica = document.createElement("div");
     dica.className = "carrossel-seta";
     dica.setAttribute("aria-hidden", "true");
-    dica.innerHTML = `Arraste para o lado <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>`;
-    cena.appendChild(dica);
+    dica.innerHTML = `<div class="carrossel-seta-miolo"><span class="carrossel-seta-icone"><svg viewBox="0 0 24 24"><path d="M5 12h13M12 5l7 7-7 7"/></svg></span>Arraste para o lado</div>`;
+    document.body.appendChild(dica);
     let dicaFeita = false, dicaTempo = 0;
     const esconderDica = () => { dicaFeita = true; clearTimeout(dicaTempo); dica.classList.remove("visivel"); obsDica.disconnect(); };
     const obsDica = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting || dicaFeita) return;
-      dica.style.top = `${trilho.offsetTop + Math.min(trilho.offsetHeight, innerHeight * 0.6) * 0.45}px`;
       requestAnimationFrame(() => dica.classList.add("visivel"));
       dicaTempo = setTimeout(esconderDica, 2200);
     }, { threshold: 0.25 });
