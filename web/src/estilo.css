@@ -536,3 +536,12 @@ html.carrossel .carrossel-barra {
 .carrossel-dica i { display: inline-block; width: 14px; height: 2px; background: currentColor; border-radius: 2px; animation: dica-arrasta 1.4s var(--ease) infinite; }
 @keyframes dica-arrasta { 0%, 100% { transform: translateX(4px); } 50% { transform: translateX(-6px); } }
 .carrossel-barra.usado .carrossel-dica { display: none; }
+
+/* até chegar à última parada, a página termina no carrossel */
+html.travado .explorador, html.travado .fim, html.travado .sobre, html.travado .topo-link { display: none; }
+.carrossel-trava {
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 16px 0;
+  padding: 14px 16px; border: 1px dashed var(--borda-forte); border-radius: 14px;
+  font-size: 13px; color: var(--texto-2); text-align: center;
+}
+.carrossel-trava svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--ambar); stroke-width: 1.6; stroke-linecap: round; }

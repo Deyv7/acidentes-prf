@@ -239,6 +239,20 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
       </div>
       <button type="button" class="seta" data-passo="1" aria-label="Próxima parada">${seta("M8 5l5 5-5 5")}</button>`;
     trilho.before(barra);
+    // O resto da página só aparece depois que a pessoa chega à última parada.
+    const trava = document.createElement("p");
+    trava.className = "carrossel-trava";
+    trilho.after(trava);
+    let travado = true;
+    raiz.classList.add("travado");
+    const destravar = () => {
+      if (!travado) return;
+      travado = false;
+      raiz.classList.remove("travado");
+      trava.remove();
+      lenis?.resize();
+      ScrollTrigger.refresh();
+    };
     trilho.setAttribute("tabindex", "0");
     trilho.setAttribute("aria-label", "Paradas da viagem; arraste para o lado para trocar");
     const nome = barra.querySelector(".carrossel-nome");
@@ -257,6 +271,11 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
       anterior.disabled = i === 0;
       proxima.disabled = i === cards.length - 1;
       ajustarAltura();
+      if (i === cards.length - 1) destravar();
+      else if (travado) {
+        const faltam = cards.length - 1 - i;
+        trava.innerHTML = `<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>Arraste até a última parada para continuar · falta${faltam > 1 ? "m" : ""} ${faltam}`;
+      }
     };
     // Ao trocar de card no meio de um texto longo, volta para o topo do novo card.
     const alinharTopo = () => {
@@ -326,7 +345,8 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
     irPara = (i) => { irCard(i); rolarAte(barra); };
 
     return () => {
-      raiz.classList.remove("carrossel");
+      raiz.classList.remove("carrossel", "travado");
+      trava.remove();
       for (const [t, f] of [["pointerdown", inicio], ["pointermove", mover], ["pointerup", fim], ["pointercancel", fim], ["dragstart", semArrastar]]) trilho.removeEventListener(t, f);
       removeEventListener("resize", reposicionar);
       gsap.killTweensOf(trilho);
