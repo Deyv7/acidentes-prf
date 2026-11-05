@@ -235,10 +235,24 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
       <div class="carrossel-meio">
         <span class="carrossel-nome" aria-live="polite"></span>
         <span class="carrossel-pontos">${cards.map((c, i) => `<button type="button" aria-label="Ir para ${String(i + 1).padStart(2, "0")} ${c.dataset.nome}"></button>`).join("")}</span>
-        <span class="carrossel-dica"><i></i>Arraste para o lado</span>
       </div>
       <button type="button" class="seta" data-passo="1" aria-label="Próxima parada">${seta("M8 5l5 5-5 5")}</button>`;
     trilho.before(barra);
+    // Seta de "arraste": aparece quando o carrossel entra na tela e some em fade.
+    const dica = document.createElement("div");
+    dica.className = "carrossel-seta";
+    dica.setAttribute("aria-hidden", "true");
+    dica.innerHTML = `Arraste para o lado <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>`;
+    cena.appendChild(dica);
+    let dicaFeita = false, dicaTempo = 0;
+    const esconderDica = () => { dicaFeita = true; clearTimeout(dicaTempo); dica.classList.remove("visivel"); obsDica.disconnect(); };
+    const obsDica = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting || dicaFeita) return;
+      dica.style.top = `${trilho.offsetTop + Math.min(trilho.offsetHeight, innerHeight * 0.6) * 0.45}px`;
+      requestAnimationFrame(() => dica.classList.add("visivel"));
+      dicaTempo = setTimeout(esconderDica, 2200);
+    }, { threshold: 0.25 });
+    obsDica.observe(trilho);
     // O resto da página só aparece depois que a pessoa chega à última parada.
     const trava = document.createElement("p");
     trava.className = "carrossel-trava";
@@ -318,7 +332,7 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
       if (!t.horizontal) return;
       const dx = e.clientX - t.x, vel = Math.abs(dx) / Math.max(1, performance.now() - t.t);
       const passo = Math.abs(dx) > trilho.clientWidth * 0.18 || (vel > 0.35 && Math.abs(dx) > 24) ? (dx < 0 ? 1 : -1) : 0;
-      if (passo) barra.classList.add("usado");
+      if (passo) esconderDica();
       irCard(atual + passo);
     };
     trilho.addEventListener("pointerdown", inicio);
@@ -346,6 +360,8 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
 
     return () => {
       raiz.classList.remove("carrossel", "travado");
+      esconderDica();
+      dica.remove();
       trava.remove();
       for (const [t, f] of [["pointerdown", inicio], ["pointermove", mover], ["pointerup", fim], ["pointercancel", fim], ["dragstart", semArrastar]]) trilho.removeEventListener(t, f);
       removeEventListener("resize", reposicionar);
