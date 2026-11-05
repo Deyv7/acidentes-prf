@@ -221,7 +221,96 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
     };
   });
 
-  mm.add("not ((min-width: 900px) and (min-height: 620px) and (prefers-reduced-motion: no-preference))", () => {
+  // Celular: as paradas viram um carrossel que se arrasta com o dedo,
+  // um card por vez, com a altura acompanhando o card da vez.
+  mm.add("(max-width: 899px)", () => {
+    const raiz = document.documentElement;
+    raiz.classList.add("carrossel");
+    if (reduz) cards.forEach((c) => c.classList.add("ativo"));
+    const seta = (d) => `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="${d}"/></svg>`;
+    const barra = document.createElement("div");
+    barra.className = "carrossel-barra";
+    barra.innerHTML = `
+      <button type="button" class="seta" data-passo="-1" aria-label="Parada anterior">${seta("M12 5l-5 5 5 5")}</button>
+      <div class="carrossel-meio">
+        <span class="carrossel-nome" aria-live="polite"></span>
+        <span class="carrossel-pontos">${cards.map((c, i) => `<button type="button" aria-label="Ir para ${String(i + 1).padStart(2, "0")} ${c.dataset.nome}"></button>`).join("")}</span>
+        <span class="carrossel-dica"><i></i>Arraste para o lado</span>
+      </div>
+      <button type="button" class="seta" data-passo="1" aria-label="Próxima parada">${seta("M8 5l5 5-5 5")}</button>`;
+    trilho.before(barra);
+    trilho.setAttribute("tabindex", "0");
+    trilho.setAttribute("aria-label", "Paradas da viagem; arraste para o lado para trocar");
+    const nome = barra.querySelector(".carrossel-nome");
+    const pontos = [...barra.querySelectorAll(".carrossel-pontos button")];
+    const [anterior, proxima] = barra.querySelectorAll(".seta");
+
+    let atual = -1, quadro = 0, parado = 0;
+    const ajustarAltura = () => { if (cards[atual]) trilho.style.height = cards[atual].offsetHeight + "px"; };
+    const mostrar = (i) => {
+      if (i === atual) return;
+      atual = i;
+      ativar(i);
+      marcarEstacao(i);
+      nome.innerHTML = `<b>${String(i + 1).padStart(2, "0")}</b>${cards[i].dataset.nome}`;
+      pontos.forEach((p, k) => p.toggleAttribute("aria-current", k === i));
+      anterior.disabled = i === 0;
+      proxima.disabled = i === cards.length - 1;
+      ajustarAltura();
+    };
+    const maisPerto = () => {
+      const meio = trilho.scrollLeft + trilho.clientWidth / 2;
+      let melhor = 0, dist = Infinity;
+      cards.forEach((c, i) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - meio); if (d < dist) { dist = d; melhor = i; } });
+      return melhor;
+    };
+    // Ao trocar de card no meio de um texto longo, volta para o topo do novo card.
+    const alinharTopo = () => {
+      const topo = trilho.getBoundingClientRect().top;
+      const limite = barra.getBoundingClientRect().bottom;
+      if (topo < limite - 4) rolarAte(scrollY + topo - limite - 8);
+    };
+    const aoRolar = () => {
+      cancelAnimationFrame(quadro);
+      quadro = requestAnimationFrame(() => mostrar(maisPerto()));
+      if (trilho.scrollLeft > 8) barra.classList.add("usado");
+      clearTimeout(parado);
+      parado = setTimeout(alinharTopo, 160);
+    };
+    const irCard = (i) => {
+      const c = cards[Math.max(0, Math.min(cards.length - 1, i))];
+      trilho.scrollTo({ left: c.offsetLeft - (trilho.clientWidth - c.offsetWidth) / 2, behavior: reduz ? "auto" : "smooth" });
+    };
+    trilho.addEventListener("scroll", aoRolar, { passive: true });
+    const teclas = (e) => {
+      if (e.key === "ArrowRight") { e.preventDefault(); irCard(atual + 1); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); irCard(atual - 1); }
+    };
+    trilho.addEventListener("keydown", teclas);
+    anterior.addEventListener("click", () => irCard(atual - 1));
+    proxima.addEventListener("click", () => irCard(atual + 1));
+    pontos.forEach((p, i) => p.addEventListener("click", () => irCard(i)));
+    const ro = new ResizeObserver(ajustarAltura);
+    cards.forEach((c) => ro.observe(c));
+    mostrar(0);
+    const irAntes = irPara;
+    irPara = (i) => { irCard(i); rolarAte(barra); };
+
+    return () => {
+      raiz.classList.remove("carrossel");
+      trilho.removeEventListener("scroll", aoRolar);
+      trilho.removeEventListener("keydown", teclas);
+      ro.disconnect();
+      clearTimeout(parado);
+      barra.remove();
+      trilho.style.height = "";
+      trilho.removeAttribute("tabindex");
+      trilho.removeAttribute("aria-label");
+      irPara = irAntes;
+    };
+  });
+
+  mm.add("(min-width: 900px) and ((max-height: 619px) or (prefers-reduced-motion: reduce))", () => {
     if (reduz) { cards.forEach((c) => c.classList.add("ativo")); }
     const obs = new IntersectionObserver((ents) => {
       for (const e of ents) {
