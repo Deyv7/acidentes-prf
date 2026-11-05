@@ -245,7 +245,7 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
     const pontos = [...barra.querySelectorAll(".carrossel-pontos button")];
     const [anterior, proxima] = barra.querySelectorAll(".seta");
 
-    let atual = -1, quadro = 0, parado = 0;
+    let atual = -1;
     const ajustarAltura = () => { if (cards[atual]) trilho.style.height = cards[atual].offsetHeight + "px"; };
     const mostrar = (i) => {
       if (i === atual) return;
@@ -258,30 +258,59 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
       proxima.disabled = i === cards.length - 1;
       ajustarAltura();
     };
-    const maisPerto = () => {
-      const meio = trilho.scrollLeft + trilho.clientWidth / 2;
-      let melhor = 0, dist = Infinity;
-      cards.forEach((c, i) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - meio); if (d < dist) { dist = d; melhor = i; } });
-      return melhor;
-    };
     // Ao trocar de card no meio de um texto longo, volta para o topo do novo card.
     const alinharTopo = () => {
       const topo = trilho.getBoundingClientRect().top;
       const limite = barra.getBoundingClientRect().bottom;
       if (topo < limite - 4) rolarAte(scrollY + topo - limite - 8);
     };
-    const aoRolar = () => {
-      cancelAnimationFrame(quadro);
-      quadro = requestAnimationFrame(() => mostrar(maisPerto()));
-      if (trilho.scrollLeft > 8) barra.classList.add("usado");
-      clearTimeout(parado);
-      parado = setTimeout(alinharTopo, 160);
-    };
+    const posicao = (i) => cards[i].offsetLeft - (trilho.clientWidth - cards[i].offsetWidth) / 2;
+    // O gesto é controlado aqui, sem a inércia nativa: cada arrasto anda
+    // no máximo um card, por mais forte que seja.
     const irCard = (i) => {
-      const c = cards[Math.max(0, Math.min(cards.length - 1, i))];
-      trilho.scrollTo({ left: c.offsetLeft - (trilho.clientWidth - c.offsetWidth) / 2, behavior: reduz ? "auto" : "smooth" });
+      i = Math.max(0, Math.min(cards.length - 1, i));
+      const mudou = i !== atual;
+      mostrar(i);
+      gsap.to(trilho, {
+        scrollLeft: posicao(i), duration: reduz ? 0 : 0.45, ease: "power3.out", overwrite: true,
+        onComplete: () => { if (mudou) alinharTopo(); },
+      });
     };
-    trilho.addEventListener("scroll", aoRolar, { passive: true });
+    let toque = null;
+    const inicio = (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      gsap.killTweensOf(trilho);
+      toque = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), base: trilho.scrollLeft, horizontal: null };
+    };
+    const mover = (e) => {
+      if (!toque || e.pointerId !== toque.id) return;
+      const dx = e.clientX - toque.x, dy = e.clientY - toque.y;
+      if (toque.horizontal === null && Math.hypot(dx, dy) > 8) {
+        toque.horizontal = Math.abs(dx) > Math.abs(dy);
+        if (toque.horizontal) trilho.setPointerCapture?.(e.pointerId);
+      }
+      if (!toque.horizontal) return;
+      const borda = (atual === 0 && dx > 0) || (atual === cards.length - 1 && dx < 0);
+      trilho.scrollLeft = toque.base - dx * (borda ? 0.3 : 1);
+    };
+    const fim = (e) => {
+      if (!toque || e.pointerId !== toque.id) return;
+      const t = toque; toque = null;
+      if (!t.horizontal) return;
+      const dx = e.clientX - t.x, vel = Math.abs(dx) / Math.max(1, performance.now() - t.t);
+      const passo = Math.abs(dx) > trilho.clientWidth * 0.18 || (vel > 0.35 && Math.abs(dx) > 24) ? (dx < 0 ? 1 : -1) : 0;
+      if (passo) barra.classList.add("usado");
+      irCard(atual + passo);
+    };
+    trilho.addEventListener("pointerdown", inicio);
+    trilho.addEventListener("pointermove", mover);
+    trilho.addEventListener("pointerup", fim);
+    trilho.addEventListener("pointercancel", fim);
+    // impede que o navegador trate o arrasto como seleção de texto ou de imagem
+    const semArrastar = (e) => e.preventDefault();
+    trilho.addEventListener("dragstart", semArrastar);
+    const reposicionar = () => gsap.set(trilho, { scrollLeft: posicao(atual) });
+    addEventListener("resize", reposicionar);
     const teclas = (e) => {
       if (e.key === "ArrowRight") { e.preventDefault(); irCard(atual + 1); }
       if (e.key === "ArrowLeft") { e.preventDefault(); irCard(atual - 1); }
@@ -298,10 +327,11 @@ export function iniciarJornada({ secao, trilho, cards, estacoes, cena }) {
 
     return () => {
       raiz.classList.remove("carrossel");
-      trilho.removeEventListener("scroll", aoRolar);
+      for (const [t, f] of [["pointerdown", inicio], ["pointermove", mover], ["pointerup", fim], ["pointercancel", fim], ["dragstart", semArrastar]]) trilho.removeEventListener(t, f);
+      removeEventListener("resize", reposicionar);
+      gsap.killTweensOf(trilho);
       trilho.removeEventListener("keydown", teclas);
       ro.disconnect();
-      clearTimeout(parado);
       barra.remove();
       trilho.style.height = "";
       trilho.removeAttribute("tabindex");
