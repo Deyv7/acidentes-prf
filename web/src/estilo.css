@@ -565,3 +565,7 @@ html.travado .explorador, html.travado .fim, html.travado .sobre, html.travado .
 .carrossel-seta.visivel { opacity: 1; transform: none; }
 .carrossel-seta svg { width: 22px; height: 22px; fill: none; stroke: var(--ambar); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; animation: seta-empurra 1s var(--ease) infinite; }
 @keyframes seta-empurra { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(5px); } }
+
+/* etiqueta da média sobre a dispersão */
+.media-etiqueta rect { fill: var(--fundo); stroke: var(--texto-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.media-etiqueta text { font-size: 12.5px; font-weight: 600; fill: var(--texto); font-variant-numeric: tabular-nums; }
