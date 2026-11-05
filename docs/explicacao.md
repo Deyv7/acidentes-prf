@@ -174,9 +174,20 @@ Numa entrevista, eu diria: "A gold do modelo tem um teste que falha se uma colun
 
 Numa entrevista, eu diria: "Antes de dizer que o Nordeste tem acidentes mais graves, eu testei se não era só o registro. O teste confirmou o Nordeste, mas mostrou que a minha conclusão sobre álcool estaria errada sem ele."
 
+## Página
+
+A página em `web/` segue a mesma regra dos documentos: nenhum número escrito à mão. O caminho é `resultados/` → `src/exportar_web.py` → `web/public/dados/*.json` → página. O exportador só usa a biblioteca padrão do Python e para com erro se algum recorte não somar o total da gold. As frases que dependem de um resultado ("acima da média", "mais que o dobro") são condicionais no código, então um dado novo não deixa o texto mentindo.
+
+- **Mapa em grade, não por município.** O mapa divide o país em quadrados de 0,5° (`grade_mapa` em `src/analise.py`, saída em `resultados/fase3_grade_mapa.csv`) e usa a mesma comparação pelo intervalo, com o mesmo mínimo de 100 acidentes. Quadrados abaixo do mínimo aparecem apagados em vez de pintados, para não parecerem um resultado. Só entram acidentes com coordenada válida, por isso a média do mapa é calculada à parte.
+- **Cor só para a comparação.** Vermelho é acima da média, azul abaixo e cinza indistinguível, sempre com legenda e com o selo escrito no explorador. A paleta é divergente e foi validada para daltonismo nos fundos claro e escuro. Âmbar e verde aparecem só no cenário (a faixa da pista e as placas), nunca num dado.
+- **As duas contas em todo gráfico.** Cada gráfico tem o botão "Só com vítima", que troca a proporção, o intervalo e a média pelos da segunda conta.
+- **Movimento.** GSAP ScrollTrigger fixa a seção e move os cards na horizontal enquanto a página rola; Lenis suaviza a rolagem. Com `prefers-reduced-motion`, ou em tela menor que 900 × 620 px, os cards ficam empilhados e nada se move sozinho. Em tela estreita os gráficos são desenhados na largura real, para o texto não encolher.
+
+Numa entrevista, eu diria: "A página é a última camada do pipeline. Ela lê os mesmos arquivos que os documentos citam, e o exportador falha se os números não fecharem."
+
 ## Testes
 
-São 151 testes em `tests/`, rodando no container. Para conferir que eles reprovam quando devem, estraguei regras de propósito e voltei o código depois: `grave` sem feridos graves, `total_envolvidos` sem ignorados, a leitura sem `escape='"'`, a expressão da hora aceitando `25:99:00`, a regra de coerência aceitando "Com Vítimas Feridas" com morto a gold do modelo com a coluna `mortos` e a análise ordenada pela proporção em vez do limite inferior do intervalo. Em todos os casos os testes da regra falharam.
+São 152 testes em `tests/`, rodando no container. Para conferir que eles reprovam quando devem, estraguei regras de propósito e voltei o código depois: `grave` sem feridos graves, `total_envolvidos` sem ignorados, a leitura sem `escape='"'`, a expressão da hora aceitando `25:99:00`, a regra de coerência aceitando "Com Vítimas Feridas" com morto a gold do modelo com a coluna `mortos` e a análise ordenada pela proporção em vez do limite inferior do intervalo. Em todos os casos os testes da regra falharam.
 
 ## Revisão de código
 

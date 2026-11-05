@@ -104,3 +104,35 @@ def transicao_por_mes(silver: DataFrame, coluna: str, anos_antes: list[int],
             .agg(F.count("*").alias("ocorrencias"),
                  F.sum(F.col(coluna).isin(so_antiga).cast("int")).alias("valor_so_da_lista_antiga"))
             .orderBy("ano", "mes"))
+
+
+# Lado da célula do mapa, em graus (cerca de 55 km no equador).
+PASSO_GRADE = 0.5
+
+
+def grade_mapa(modelo: DataFrame, passo: float = PASSO_GRADE, n_min: int = N_MIN) -> DataFrame:
+    """Acidentes por célula de `passo` graus, para o mapa da página.
+
+    Só ocorrências com coordenada válida. Cada célula é comparada com a média
+    das ocorrências com coordenada, pelo mesmo critério dos recortes.
+    """
+    from src.gold import intervalo_wilson
+
+    base = modelo.where("coord_valida")
+    media = base.agg(F.avg(F.col("grave").cast("double"))).collect()[0][0]
+    agg = (base
+           .withColumn("lat_celula", F.floor(F.col("latitude") / passo) * passo)
+           .withColumn("lon_celula", F.floor(F.col("longitude") / passo) * passo)
+           .groupBy("lat_celula", "lon_celula")
+           .agg(F.count("*").alias("ocorrencias"), F.sum(F.col("grave").cast("int")).alias("graves")))
+    inf, sup = intervalo_wilson(F.col("graves"), F.col("ocorrencias"))
+    return (agg
+            .withColumn("pct_graves", F.col("graves") / F.col("ocorrencias"))
+            .withColumn("ic95_inf", inf).withColumn("ic95_sup", sup)
+            .withColumn("media", F.lit(media))
+            .withColumn("comparacao",
+                        F.when(F.col("ocorrencias") < n_min, F.lit("amostra pequena"))
+                         .when(F.col("ic95_inf") > F.col("media"), F.lit("acima"))
+                         .when(F.col("ic95_sup") < F.col("media"), F.lit("abaixo"))
+                         .otherwise(F.lit("indistinguível")))
+            .orderBy("lat_celula", "lon_celula"))
