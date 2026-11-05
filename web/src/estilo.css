@@ -89,22 +89,9 @@ strong { color: var(--texto); font-weight: 650; }
     radial-gradient(1px 1px at 5% 40%, #fff7 50%, transparent 51%),
     radial-gradient(1px 1px at 55% 4%, #fff9 50%, transparent 51%);
 }
-.abertura-estrada { position: absolute; inset: 66% 0 0 0; perspective: 300px; perspective-origin: 50% 0; overflow: hidden; }
-.pista-3d {
-  position: absolute; left: 50%; top: 0; width: 70vw; min-width: 520px; height: 220%;
-  transform: translateX(-50%) rotateX(72deg); transform-origin: 50% 0;
-  background:
-    linear-gradient(90deg, transparent 0 3%, #e8e6df 3% 3.6%, transparent 3.6% 96.4%, #e8e6df 96.4% 97%, transparent 97%),
-    linear-gradient(180deg, #121316, #1c1d21);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-}
-.pista-faixa {
-  position: absolute; left: 50%; top: 0; bottom: 0; width: 0.7%; transform: translateX(-50%);
-  background: repeating-linear-gradient(180deg, var(--ambar) 0 18px, transparent 18px 44px);
-  animation: faixa-desce 0.7s linear infinite;
-}
-@keyframes faixa-desce { to { background-position-y: 44px; } }
+.abertura-estrada { position: absolute; inset: 66% 0 0 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%); mask-image: linear-gradient(180deg, transparent, #000 30%); }
+.estrada-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .abertura-conteudo { position: relative; z-index: 2; text-align: center; padding: 0 20px; margin-top: -10vh; max-width: 900px; }
 .abertura h1 {
   margin: 0 0 22px; font-size: clamp(42px, 8.4vw, 112px); line-height: 0.95; letter-spacing: -0.045em; font-weight: 700;
@@ -473,7 +460,8 @@ table.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
     radial-gradient(70% 45% at 50% 100%, rgba(242, 179, 61, 0.14), transparent 70%),
     linear-gradient(180deg, var(--fundo), #0b0f18);
 }
-.fim-estrada { position: absolute; inset: 62% 0 0 0; perspective: 300px; perspective-origin: 50% 0; overflow: hidden; opacity: .7; pointer-events: none; }
+.fim-estrada { position: absolute; inset: 62% 0 0 0; overflow: hidden; opacity: .7; pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%); mask-image: linear-gradient(180deg, transparent, #000 35%); }
 .fim-cartao { position: relative; z-index: 1; max-width: 640px; }
 .fim-cartao::before { /* véu escuro atrás do texto, para a estrada não disputar a leitura */
   content: ""; position: absolute; inset: -20% -24%; z-index: -1; pointer-events: none;
@@ -503,3 +491,49 @@ table.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
 .contato:hover { color: var(--texto); background-size: 0 1px; background-position: 100% 100%; }
 .assinatura { max-width: 1240px; margin: 40px auto 0 !important; padding-top: 24px; border-top: 1px solid var(--borda); font-size: 13px !important; color: var(--mudo) !important; }
 .assinatura b { color: var(--texto-2); font-weight: 600; }
+
+/* ---------- celular: topo opaco e fim com a estrada logo abaixo dos botões ---------- */
+@media (max-width: 899px) {
+  .topo { background: rgba(8, 9, 11, 0.86); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--borda); }
+  .fim { display: flex; flex-direction: column; min-height: 0; padding: calc(var(--topo) + 56px) 20px 0; }
+  .fim-cartao { margin: 0 auto; }
+  .fim-estrada { order: 2; align-self: stretch; position: relative; inset: auto; height: 240px; margin: 8px -20px 0; opacity: .8; }
+}
+
+/* ---------- celular: paradas em carrossel de arrastar ---------- */
+.carrossel-barra { display: none; }
+html.carrossel .cena { overflow: clip; padding-top: 0; }
+html.carrossel .trilho {
+  display: flex; gap: 12px; max-width: none; margin: 0; padding: 0 16px;
+  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scroll-padding: 0 16px;
+  overscroll-behavior-x: contain; scrollbar-width: none; align-items: flex-start;
+  transition: height .35s var(--ease);
+}
+html.carrossel .trilho::-webkit-scrollbar { display: none; }
+html.carrossel .trilho::before { display: none; }
+html.carrossel .parada { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; scroll-snap-stop: always; }
+html.carrossel .carrossel-barra {
+  display: flex; align-items: center; gap: 10px; position: sticky; top: var(--topo); z-index: 5;
+  padding: 12px 16px; margin-bottom: 14px;
+  background: rgba(8, 9, 11, 0.86); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--borda);
+}
+.carrossel-barra button.seta {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--borda-forte); background: rgba(255, 255, 255, 0.03); color: var(--texto); cursor: pointer;
+}
+.carrossel-barra button.seta:disabled { opacity: .3; cursor: default; }
+.carrossel-barra button.seta svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.carrossel-meio { flex: 1; min-width: 0; display: grid; gap: 8px; justify-items: center; }
+.carrossel-nome { font-size: 13px; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.carrossel-nome b { color: var(--ambar); font-variant-numeric: tabular-nums; font-weight: 600; margin-right: 6px; }
+.carrossel-pontos { display: flex; gap: 6px; }
+.carrossel-pontos button {
+  width: 7px; height: 7px; padding: 0; border: 0; border-radius: 999px; background: var(--borda-forte); cursor: pointer;
+  transition: width .3s var(--ease), background .3s;
+}
+.carrossel-pontos button[aria-current] { width: 20px; background: var(--ambar); }
+.carrossel-dica { font-size: 11.5px; color: var(--mudo); display: inline-flex; align-items: center; gap: 6px; transition: opacity .4s; }
+.carrossel-dica i { display: inline-block; width: 14px; height: 2px; background: currentColor; border-radius: 2px; animation: dica-arrasta 1.4s var(--ease) infinite; }
+@keyframes dica-arrasta { 0%, 100% { transform: translateX(4px); } 50% { transform: translateX(-6px); } }
+.carrossel-barra.usado .carrossel-dica { display: none; }

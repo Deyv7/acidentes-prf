@@ -5,6 +5,9 @@ import { paradas } from "./narrativa.js";
 import { dicaHtml } from "./graficos.js";
 import { montarExplorador } from "./explorador.js";
 import { iniciarJornada } from "./jornada.js";
+import { criarEstrada } from "./estrada.js";
+
+for (const id of ["estrada-abertura", "estrada-fim"]) criarEstrada(document.getElementById(id));
 
 function montarAbertura(d) {
   const S = d.resumo;
