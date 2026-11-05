@@ -1,0 +1,31 @@
+coluna,tipo_inferido,vazios,na,pct_nulo,distintos,exemplos
+id,inteiro,0,0,0.0,64606,405151 | 405158 | 405172
+data_inversa,data_iso,0,0,0.0,365,2022-12-23 | 2022-07-24 | 2022-12-17
+dia_semana,texto,0,0,0.0,7,domingo | sábado | sexta-feira
+horario,hora,0,0,0.0,1388,19:00:00 | 18:00:00 | 18:30:00
+uf,texto,0,0,0.0,27,MG | SC | PR
+br,inteiro,0,0,0.0,117,101 | 116 | 40
+km,decimal_virgula,0,0,0.0,7527,0 | 1 | 2
+municipio,texto,0,0,0.0,1802,BRASILIA | CURITIBA | GUARULHOS
+causa_acidente,texto,0,0,0.0,71,Reação tardia ou ineficiente do condutor | Ausência de reação do condutor | Acessar a via sem observar a presença dos outros veículos
+tipo_acidente,texto,0,0,0.0,16,Colisão traseira | Saída de leito carroçável | Colisão transversal
+classificacao_acidente,texto,0,1,0.002,3,Com Vítimas Feridas | Sem Vítimas | Com Vítimas Fatais
+fase_dia,texto,0,0,0.0,4,Pleno dia | Plena Noite | Anoitecer
+sentido_via,texto,0,0,0.0,3,Crescente | Decrescente | Não Informado
+condicao_metereologica,texto,0,0,0.0,10,Céu Claro | Nublado | Chuva
+tipo_pista,texto,0,0,0.0,3,Simples | Dupla | Múltipla
+tracado_via,texto,0,0,0.0,440,Reta | Curva | Interseção de Vias
+uso_solo,texto,0,0,0.0,2,Não | Sim
+pessoas,inteiro,0,0,0.0,58,2 | 1 | 3
+mortos,inteiro,0,0,0.0,8,0 | 1 | 2
+feridos_leves,inteiro,0,0,0.0,31,1 | 0 | 2
+feridos_graves,inteiro,0,0,0.0,15,0 | 1 | 2
+ilesos,inteiro,0,0,0.0,50,1 | 0 | 2
+ignorados,inteiro,0,0,0.0,18,0 | 1 | 2
+feridos,inteiro,0,0,0.0,35,1 | 0 | 2
+veiculos,inteiro,0,0,0.0,18,2 | 1 | 3
+latitude,decimal_virgula,0,0,0.0,34699,"-8,766685 | -3,76999035 | -27,59193546"
+longitude,decimal_virgula,0,0,0.0,34692,"-63,884052 | -38,67006282 | -48,61824557"
+regional,texto,0,2,0.003,28,SPRF-MG | SPRF-SC | SPRF-PR
+delegacia,texto,0,2,0.003,154,DEL01-PR | DEL04-SC | DEL01-MG
+uop,texto,0,2,0.003,395,UOP01-DEL01-SC | UOP01-DEL01-SP | UOP03-DEL01-MG

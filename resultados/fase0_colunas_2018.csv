@@ -1,0 +1,31 @@
+coluna,tipo_inferido,vazios,na,pct_nulo,distintos,exemplos
+id,texto,0,0,0.0,69333,100027 | 100044 | 100046
+data_inversa,data_iso,0,0,0.0,365,2018-02-10 | 2018-12-22 | 2018-02-09
+dia_semana,texto,0,0,0.0,7,domingo | sábado | sexta-feira
+horario,hora,0,0,0.0,1292,18:00:00 | 18:30:00 | 19:00:00
+uf,texto,0,0,0.0,27,MG | SC | PR
+br,inteiro,0,0,0.0,113,101 | 116 | 381
+km,decimal_virgula,0,0,0.0,8047,1 | 2 | 4
+municipio,texto,0,0,0.0,1782,CURITIBA | SAO JOSE | BRASILIA
+causa_acidente,texto,0,0,0.0,31,Falta de Atenção à Condução | Desobediência às normas de trânsito pelo condutor | Velocidade Incompatível
+tipo_acidente,texto,23,0,0.033,17,Colisão traseira | Saída de leito carroçável | Colisão transversal
+classificacao_acidente,texto,0,1,0.001,3,Com Vítimas Feridas | Sem Vítimas | Com Vítimas Fatais
+fase_dia,texto,0,0,0.0,4,Pleno dia | Plena Noite | Anoitecer
+sentido_via,texto,0,0,0.0,3,Crescente | Decrescente | Não Informado
+condicao_metereologica,texto,0,0,0.0,9,Céu Claro | Nublado | Chuva
+tipo_pista,texto,0,0,0.0,3,Simples | Dupla | Múltipla
+tracado_via,texto,0,0,0.0,282,Reta | Curva | Interseção de Vias
+uso_solo,texto,0,0,0.0,2,Não | Sim
+pessoas,inteiro,0,0,0.0,54,2 | 1 | 3
+mortos,inteiro,0,0,0.0,10,0 | 1 | 2
+feridos_leves,inteiro,0,0,0.0,31,1 | 0 | 2
+feridos_graves,inteiro,0,0,0.0,15,0 | 1 | 2
+ilesos,inteiro,0,0,0.0,46,1 | 0 | 2
+ignorados,inteiro,0,0,0.0,16,0 | 1 | 2
+feridos,inteiro,0,0,0.0,34,1 | 0 | 2
+veiculos,inteiro,0,0,0.0,20,2 | 1 | 3
+latitude,decimal_virgula,0,0,0.0,52038,"-25,02817 | -27,6446 | -27,6301"
+longitude,decimal_virgula,0,0,0.0,52159,"-53,55983 | -48,6705 | -48,659"
+regional,texto,0,0,0.0,27,SPRF-MG | SPRF-SC | SPRF-PR
+delegacia,texto,0,0,0.0,149,DEL01-PR | DEL01-SC | DEL04-SC
+uop,texto,0,0,0.0,397,UOP01-DEL01-SC | UOP03-DEL01-MG | UOP01-DEL01-SP

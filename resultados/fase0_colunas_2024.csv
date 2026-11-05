@@ -1,0 +1,31 @@
+coluna,tipo_inferido,vazios,na,pct_nulo,distintos,exemplos
+id,texto,0,0,0.0,73202,571789 | 571804 | 571806
+data_inversa,data_iso,0,0,0.0,366,2024-12-21 | 2024-10-20 | 2024-12-22
+dia_semana,texto,0,0,0.0,7,domingo | sábado | sexta-feira
+horario,hora,0,0,0.0,1415,19:00:00 | 18:00:00 | 18:30:00
+uf,texto,0,0,0.0,27,MG | SC | PR
+br,inteiro,0,0,0.0,113,101 | 116 | 381
+km,decimal_virgula,0,0,0.0,7685,1 | 0 | 4
+municipio,texto,0,0,0.0,1834,BRASILIA | GUARULHOS | DUQUE DE CAXIAS
+causa_acidente,texto,0,0,0.0,69,Reação tardia ou ineficiente do condutor | Ausência de reação do condutor | Acessar a via sem observar a presença dos outros veículos
+tipo_acidente,texto,0,0,0.0,17,Colisão traseira | Saída de leito carroçável | Colisão transversal
+classificacao_acidente,texto,0,1,0.001,3,Com Vítimas Feridas | Sem Vítimas | Com Vítimas Fatais
+fase_dia,texto,0,0,0.0,4,Pleno dia | Plena Noite | Anoitecer
+sentido_via,texto,0,0,0.0,3,Crescente | Decrescente | Não Informado
+condicao_metereologica,texto,0,0,0.0,10,Céu Claro | Nublado | Chuva
+tipo_pista,texto,0,0,0.0,3,Simples | Dupla | Múltipla
+tracado_via,texto,0,0,0.0,659,Reta | Curva | Reta;Declive
+uso_solo,texto,0,0,0.0,2,Não | Sim
+pessoas,inteiro,0,0,0.0,62,2 | 1 | 3
+mortos,inteiro,0,0,0.0,12,0 | 1 | 2
+feridos_leves,inteiro,0,0,0.0,35,1 | 0 | 2
+feridos_graves,inteiro,0,0,0.0,18,0 | 1 | 2
+ilesos,inteiro,0,0,0.0,53,1 | 0 | 2
+ignorados,inteiro,0,0,0.0,17,0 | 1 | 2
+feridos,inteiro,0,0,0.0,40,1 | 0 | 2
+veiculos,inteiro,0,0,0.0,20,2 | 1 | 3
+latitude,decimal_virgula,0,0,0.0,37646,"-27,59193546 | -8,766685 | -27,57413014"
+longitude,decimal_virgula,0,0,0.0,37626,"-48,61824557 | -63,884052 | -48,61363083"
+regional,texto,0,0,0.0,28,SPRF-MG | SPRF-SC | SPRF-PR
+delegacia,texto,0,0,0.0,155,DEL01-PR | DEL04-SC | DEL01-SC
+uop,texto,0,0,0.0,394,UOP01-DEL01-SC | UOP01-DEL01-SP | UOP03-DEL01-MG

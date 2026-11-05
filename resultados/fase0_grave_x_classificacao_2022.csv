@@ -1,0 +1,7 @@
+classificacao_acidente,mortos_maior_0,feridos_graves_maior_0,grave_proposto,ocorrencias
+(nulo),False,False,False,1
+Com Vítimas Fatais,True,False,True,3644
+Com Vítimas Fatais,True,True,True,1020
+Com Vítimas Feridas,False,False,False,34690
+Com Vítimas Feridas,False,True,True,13745
+Sem Vítimas,False,False,False,11506

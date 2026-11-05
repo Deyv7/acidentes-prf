@@ -23,10 +23,19 @@ from pathlib import Path
 
 NULOS = {"", "NA"}
 
-# Extremos do território continental brasileiro (pontos extremos do IBGE),
-# com folga de ~0,01 grau. Ilhas oceânicas ficam de fora porque não têm BR.
+# Extremos do território continental com folga de ~0,01 grau, mais uma caixa
+# só para Fernando de Noronha (PE), que tem a BR-363: a validação de 2024 achou
+# um acidente real lá (id 620583, longitude -32,41). Alargar a caixa continental
+# até -32,35 deixaria passar coordenadas erradas no mar (vistas em 2017).
 LAT_MIN, LAT_MAX = -33.76, 5.28
 LON_MIN, LON_MAX = -74.00, -34.78
+NORONHA = (-3.95, -3.80, -32.55, -32.35)  # lat_min, lat_max, lon_min, lon_max
+
+
+def dentro_do_brasil(a: float, o: float) -> bool:
+    if LAT_MIN <= a <= LAT_MAX and LON_MIN <= o <= LON_MAX:
+        return True
+    return NORONHA[0] <= a <= NORONHA[1] and NORONHA[2] <= o <= NORONHA[3]
 
 CATEGORICAS = [
     "dia_semana", "uf", "br", "causa_acidente", "tipo_acidente",
@@ -159,8 +168,7 @@ def checar_qualidade(linhas: list[dict], ano: int) -> tuple[list[dict], dict]:
     lon = [num(r["longitude"]) for r in linhas]
     coord_nula = sum(1 for a, o in zip(lat, lon) if a is None or o is None)
     fora_br = [(a, o) for a, o in zip(lat, lon)
-               if a is not None and o is not None
-               and not (LAT_MIN <= a <= LAT_MAX and LON_MIN <= o <= LON_MAX)]
+               if a is not None and o is not None and not dentro_do_brasil(a, o)]
     zero_zero = sum(1 for a, o in zip(lat, lon) if a == 0 and o == 0)
     trocadas = sum(1 for a, o in fora_br
                    if LAT_MIN <= o <= LAT_MAX and LON_MIN <= a <= LON_MAX)
@@ -378,6 +386,34 @@ def main() -> None:
                        "data_min": min(r["data_inversa"] for r in linhas),
                        "data_max": max(r["data_inversa"] for r in linhas)})
     gravar_csv(args.saida / "fase0_resumo_por_ano.csv", resumo)
+
+    # Pontos a leste da costa continental (-34,78) e até Noronha, aceitos ou não.
+    # Serve para conferir que só os do arquipélago passam no teste.
+    leste = []
+    for ano, linhas in sorted(ocorr_por_ano.items()):
+        for r in linhas:
+            a, o = num(r["latitude"]), num(r["longitude"])
+            if a is not None and o is not None and LON_MAX < o <= NORONHA[3] and LAT_MIN <= a <= LAT_MAX:
+                leste.append({"ano": ano, "id": r["id"], "uf": r["uf"], "br": r["br"], "km": r["km"],
+                              "municipio": r["municipio"], "latitude": a, "longitude": o,
+                              "aceito": dentro_do_brasil(a, o)})
+    gravar_csv(args.saida / "fase0_coord_leste_da_costa.csv", leste or [{"ano": "", "id": ""}])
+
+    # Série mensal da proporção de "Sem Vítimas", para localizar a quebra.
+    mensal = []
+    for ano, linhas in sorted(ocorr_por_ano.items()):
+        por_mes = defaultdict(Counter)
+        for r in linhas:
+            m = r["data_inversa"][:7]
+            por_mes[m]["total"] += 1
+            por_mes[m]["sem_vitimas"] += r["classificacao_acidente"] == "Sem Vítimas"
+            por_mes[m]["com_morto"] += (num(r["mortos"]) or 0) > 0
+        for m in sorted(por_mes):
+            c = por_mes[m]
+            mensal.append({"mes": m, "ocorrencias": c["total"], "sem_vitimas": c["sem_vitimas"],
+                           "pct_sem_vitimas": round(100 * c["sem_vitimas"] / c["total"], 2),
+                           "com_morto": c["com_morto"]})
+    gravar_csv(args.saida / "fase0_sem_vitimas_por_mes.csv", mensal)
 
     anos = sorted(layout)
     todas = sorted({c for cab in layout.values() for c in cab}, key=lambda c: (layout[anos[-1]] + [c]).index(c))
