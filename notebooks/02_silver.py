@@ -1,10 +1,11 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 02 · Silver: limpa, tipada e deduplicada
+# MAGIC # 02 · Silver: limpa, tipada, uma linha por ocorrência
 # MAGIC
-# MAGIC Lê `bronze_ocorrencias`, para se algum valor não converter para o tipo
-# MAGIC esperado, aplica as regras de `src/silver.py` e grava `silver_ocorrencias`,
-# MAGIC com uma linha por ocorrência.
+# MAGIC Lê `bronze_ocorrencias` e usa só a ingestão mais recente de cada arquivo.
+# MAGIC Para se algum valor estiver fora do formato, faltar campo obrigatório ou
+# MAGIC um id se repetir. Depois aplica as regras de `src/silver.py` e grava
+# MAGIC `silver_ocorrencias`.
 
 # COMMAND ----------
 
@@ -16,7 +17,8 @@ import json
 
 from pyspark.sql import functions as F
 
-from src.silver import falhas_de_conversao, transformar
+from src.silver import (BronzeInvalida, ids_repetidos, problemas_por_linha,
+                        transformar, ultima_ingestao, validar_bronze)
 
 CATALOGO = "portfolio"
 ESQUEMA = "acidentes_prf"
@@ -27,11 +29,12 @@ SILVER = f"{CATALOGO}.{ESQUEMA}.silver_ocorrencias"
 
 bronze = spark.table(BRONZE)
 
-falhas = falhas_de_conversao(bronze)
-n_falhas = falhas.count()
-if n_falhas:
-    display(falhas)
-    raise ValueError(f"{n_falhas} linhas com valor que não converte. A fonte mudou: investigar antes de seguir.")
+try:
+    validar_bronze(bronze)
+except BronzeInvalida:
+    display(problemas_por_linha(bronze).limit(100))
+    display(ids_repetidos(bronze).limit(100))
+    raise
 
 # COMMAND ----------
 
@@ -47,7 +50,13 @@ spark.sql(f"COMMENT ON TABLE {SILVER} IS "
 
 # COMMAND ----------
 
-# Mesma conferência de src/executar_local.py: tem que bater com resultados/fase1_conferencia_silver.csv
+# Nenhuma linha da ingestão vigente pode sumir nem aparecer na silver.
+n_bronze = ultima_ingestao(bronze).count()
+n_silver = spark.table(SILVER).count()
+assert n_bronze == n_silver, f"bronze vigente {n_bronze} linhas, silver {n_silver}"
+
+# Mesma conferência de src/executar_local.py. A saída volta para quem disparou
+# o job e src/conferir_databricks.py compara com resultados/fase1_conferencia_silver.csv.
 conferencia = (spark.table(SILVER).groupBy("ano").agg(
     F.count("*").alias("ocorrencias"),
     F.sum(F.col("grave").cast("int")).alias("graves"),
@@ -58,5 +67,5 @@ conferencia = (spark.table(SILVER).groupBy("ano").agg(
 ).orderBy("ano"))
 display(conferencia)
 
-# A saída do notebook volta para quem disparou o job (CLI), para comparar com a execução local.
-dbutils.notebook.exit(json.dumps([r.asDict() for r in conferencia.collect()]))
+dbutils.notebook.exit(json.dumps({"linhas_bronze_vigente": n_bronze,
+                                  "por_ano": [r.asDict() for r in conferencia.collect()]}))

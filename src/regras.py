@@ -21,6 +21,8 @@ CONTAGENS = ["pessoas", "mortos", "feridos_leves", "feridos_graves", "ilesos",
 
 # Primeiro ano do sistema BAT. Antes disso o registro era outro (BR-Brasil).
 ANO_INICIAL = 2017
+# Último ano completo. 2026 ainda está em andamento e fica fora da bronze.
+ANO_FINAL = 2025
 
 # Em abril de 2018 a proporção de "Sem Vítimas" cai de ~30% para ~18% e não
 # volta (resultados/fase0_sem_vitimas_por_mes.csv). Antes dessa data, total de

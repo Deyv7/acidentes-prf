@@ -6,21 +6,27 @@ feita na Fase 0 com a biblioteca padrão (src/validar_fonte.py).
 
 Uso (dentro do container de testes, ver README):
     python -m src.executar_local --dados /dados/bruto --lake /lake --resultados resultados
+
+Saídas em resultados/:
+- fase1_conferencia_bronze_colunas.csv: por ano e coluna, vazios, NA e
+  distintos contados pelo Spark na bronze contra os da Fase 0;
+- fase1_conferencia_silver.csv: por ano, contagens da silver contra a Fase 0;
+- fase1_esquema_silver.csv: colunas e tipos da silver;
+- fase1_ids_corrigidos.csv: evidência para cada id em notação científica.
 """
 from __future__ import annotations
 
 import argparse
 import csv
-from datetime import datetime, timezone
 from pathlib import Path
 
 from delta import configure_spark_with_delta_pip
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 
-from src.bronze import extrair_zip, montar_bronze
-from src.regras import ANO_INICIAL
-from src.silver import falhas_de_conversao, transformar
+from src.bronze import agora_utc, extrair_zip, montar_bronze, zips_do_recorte
+from src.regras import COLUNAS_FONTE
+from src.silver import transformar, ultima_ingestao, validar_bronze
 
 
 def sessao_local(lake: Path) -> SparkSession:
@@ -34,38 +40,84 @@ def sessao_local(lake: Path) -> SparkSession:
     return configure_spark_with_delta_pip(b).getOrCreate()
 
 
+def gravar_csv(caminho: Path, linhas: list[dict]) -> None:
+    caminho.parent.mkdir(exist_ok=True)
+    with open(caminho, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(linhas[0]), lineterminator="\n")
+        w.writeheader()
+        w.writerows(linhas)
+
+
+def conferir_colunas_bronze(bronze: DataFrame, resultados: Path) -> list[dict]:
+    """Vazios, NA e distintos por coluna e ano, contra resultados/fase0_colunas_<ano>.csv.
+
+    Na Fase 0, "vazios" é o campo vazio no CSV; o Spark lê campo vazio como
+    nulo. "distintos" conta valores que não são vazio nem NA.
+    """
+    aggs = []
+    for c in COLUNAS_FONTE:
+        aggs += [F.sum(F.col(c).isNull().cast("int")).alias(f"{c}__vazios"),
+                 F.sum((F.col(c) == "NA").cast("int")).alias(f"{c}__na"),
+                 F.count_distinct(F.when(F.col(c) != "NA", F.col(c))).alias(f"{c}__distintos")]
+    por_ano = {r["_ano_arquivo"]: r for r in bronze.groupBy("_ano_arquivo").agg(*aggs).collect()}
+
+    saida = []
+    for ano in sorted(por_ano):
+        spark_ano = por_ano[ano]
+        fase0 = {r["coluna"]: r for r in
+                 csv.DictReader(open(resultados / f"fase0_colunas_{ano}.csv", encoding="utf-8"))}
+        for c in COLUNAS_FONTE:
+            linha = {"ano": ano, "coluna": c}
+            bate = True
+            for medida in ("vazios", "na", "distintos"):
+                s, f0 = spark_ano[f"{c}__{medida}"] or 0, int(fase0[c][medida])
+                linha[f"{medida}_bronze"], linha[f"{medida}_fase0"] = s, f0
+                bate &= s == f0
+            linha["bate"] = bate
+            saida.append(linha)
+    gravar_csv(resultados / "fase1_conferencia_bronze_colunas.csv", saida)
+    return saida
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dados", type=Path, required=True)
     ap.add_argument("--lake", type=Path, required=True)
     ap.add_argument("--resultados", type=Path, default=Path("resultados"))
-    ap.add_argument("--ano-final", type=int, default=2025)
     args = ap.parse_args()
 
-    zips = sorted(z for z in args.dados.glob("ocorrencia_*/ocorrencia_*.zip")
-                  if ANO_INICIAL <= int(z.stem.split("_")[1]) <= args.ano_final)
+    # Os ZIPs locais estão em ocorrencia_<ano>/ocorrencia_<ano>.zip; o nome
+    # usado no Databricks é datatran<ano>.zip. zips_do_recorte decide o recorte.
+    locais = {f"datatran{z.stem.split('_')[1]}.zip": z
+              for z in args.dados.glob("ocorrencia_*/ocorrencia_*.zip")}
+    zips = [locais[n] for n in zips_do_recorte(list(locais))]
     csvs = [str(extrair_zip(z, args.lake / "csv")) for z in zips]
 
     spark = sessao_local(args.lake)
-    ingerido_em = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
 
-    bronze = montar_bronze(spark, csvs, ingerido_em)
-    bronze.write.format("delta").mode("overwrite").save(str(args.lake / "bronze_ocorrencias"))
-    bronze = spark.read.format("delta").load(str(args.lake / "bronze_ocorrencias"))
+    # Bronze acumulativa (append), como no Databricks.
+    caminho_bronze = str(args.lake / "bronze_ocorrencias")
+    montar_bronze(spark, csvs, agora_utc()).write.format("delta").mode("append").save(caminho_bronze)
+    bronze = spark.read.format("delta").load(caminho_bronze)
 
-    n_falhas = falhas_de_conversao(bronze).count()
-    if n_falhas:
-        raise SystemExit(f"{n_falhas} linhas com valor que não converte; ver falhas_de_conversao")
+    validar_bronze(bronze)  # para aqui se houver formato errado, campo vazio ou id repetido
+    vigente = ultima_ingestao(bronze)
+
+    colunas = conferir_colunas_bronze(vigente, args.resultados)
+    divergentes = [c for c in colunas if not c["bate"]]
+    print(f"bronze x Fase 0: {len(colunas)} pares ano/coluna, {len(divergentes)} divergentes")
+    for c in divergentes:
+        print("  ", c)
 
     silver = transformar(bronze)
-    (silver.write.format("delta").mode("overwrite")
+    (silver.write.format("delta").mode("overwrite").option("overwriteSchema", "true")
      .save(str(args.lake / "silver_ocorrencias")))
     silver = spark.read.format("delta").load(str(args.lake / "silver_ocorrencias"))
 
     # Ids corrigidos (notação científica): o mesmo número existe escrito por
     # extenso em outra linha? Os vizinhos (id-1 e id+1) são do mesmo dia?
     corrigidos = silver.where("id_corrigido").select("id", "data", "_arquivo_origem").collect()
-    ids_bronze = bronze.select("id", F.col("data_inversa").alias("data_viz"))
+    ids_bronze = vigente.select("id", F.col("data_inversa").alias("data_viz"))
     evid = []
     for c in corrigidos:
         viz = {r["id"]: r["data_viz"] for r in
@@ -74,16 +126,11 @@ def main() -> None:
                      "mesmo_id_por_extenso": str(c["id"]) in viz,
                      "data_id_menos_1": viz.get(str(c["id"] - 1), ""),
                      "data_id_mais_1": viz.get(str(c["id"] + 1), "")})
-    args.resultados.mkdir(exist_ok=True)
-    with open(args.resultados / "fase1_ids_corrigidos.csv", "w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["id", "arquivo", "data", "mesmo_id_por_extenso",
-                                          "data_id_menos_1", "data_id_mais_1"], lineterminator="\n")
-        w.writeheader()
-        w.writerows(sorted(evid, key=lambda r: r["id"]))
+    gravar_csv(args.resultados / "fase1_ids_corrigidos.csv", sorted(evid, key=lambda r: r["id"]))
 
     # Conferência por ano: tudo que a Fase 0 contou, agora contado pelo Spark.
     por_ano_bronze = {r["_ano_arquivo"]: r["n"] for r in
-                      bronze.groupBy("_ano_arquivo").agg(F.count("*").alias("n")).collect()}
+                      vigente.groupBy("_ano_arquivo").agg(F.count("*").alias("n")).collect()}
     linhas = (silver.groupBy("ano").agg(
         F.count("*").alias("ocorrencias_silver"),
         F.sum(F.col("grave").cast("int")).alias("graves"),
@@ -117,11 +164,7 @@ def main() -> None:
                                and r["graves"] == int(f0["graves"])
                                and r["com_morto"] == int(f0["com_morto"])),
         })
-    args.resultados.mkdir(exist_ok=True)
-    with open(args.resultados / "fase1_conferencia_silver.csv", "w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(saida[0]), lineterminator="\n")
-        w.writeheader()
-        w.writerows(saida)
+    gravar_csv(args.resultados / "fase1_conferencia_silver.csv", saida)
 
     with open(args.resultados / "fase1_esquema_silver.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\n")
@@ -131,6 +174,8 @@ def main() -> None:
     for r in saida:
         print(r)
     spark.stop()
+    if divergentes or not all(r["bate_com_fase0"] for r in saida):
+        raise SystemExit("conferência com a Fase 0 falhou: ver resultados/fase1_conferencia_*.csv")
 
 
 if __name__ == "__main__":

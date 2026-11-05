@@ -46,6 +46,9 @@ NUMERICAS_SEM_ASPAS = {"id", "br", "km", "pessoas", "mortos", "feridos_leves", "
                        "data_inversa"}
 
 
+INGESTAO = "2026-11-04T12:00:00Z"
+
+
 def linha(**mudancas) -> dict:
     return {**LINHA_BASE, **mudancas}
 
